@@ -3,10 +3,8 @@
 #include "move.h"
 
 
-Board position;
+Board position; // global
 
-int FigureWhiteCoord256[16];//позиции белых фигур на доске (для быстрого доступа к фигурам. 0- фигуры нет)
-int FigureBlackCoord256[16];//позиции чёрных фигур на доске (для быстрого доступа к фигурам. 0- фигуры нет)
 int *KingWhitePointer; //указатель на короля в массиве позиций белых
 int *KingBlackPointer; //указатель на короля в массиве позиций чёрных
 
@@ -28,9 +26,6 @@ int main() {
 int count_end_pos = 0;
     int my_score(int depth, int alpha, int beta, int current_player) {
 
-        //printf(" %d ", FigureWhiteCoord256[depth][0]);
-        //printf(" %d ", FigureBlackCoord256[depth][0]);
-
         if (depth == 0) { // дошли до листка
             board_print(position);
             count_end_pos++;
@@ -44,7 +39,7 @@ int count_end_pos = 0;
         for ( test = 0; moves[depth][test].MoveType != -1; test++);
         printf("Количество ходов, сгенеренных: %d\n", test);
 
-       // printf(" %d ", FigureWhiteCoord256[0]);
+
         for (int i = 0; moves[depth][i].MoveType != -1; i++) {
 
 

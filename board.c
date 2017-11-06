@@ -64,15 +64,6 @@ void test_board(Board board) {
     board[104] = FIGURE_TYPE_KING|BLACK;
     board[107] = FIGURE_TYPE_QUEEN|BLACK;
 
-
-    for(int i = 0; i < 16; i++) {
-        FigureWhiteCoord256[i] = 0;
-        FigureBlackCoord256[i] = 0;
-    }
-
-    FigureWhiteCoord256[0] = 72;
-    FigureBlackCoord256[0] = 104;
-    FigureBlackCoord256[1] = 107;
 }
 
 void board_print(Board board) {

@@ -8,8 +8,6 @@
 #include "board.h"
 
 extern Board position;
-extern int FigureWhiteCoord256[16];
-extern int FigureBlackCoord256[16];
 extern int *KingWhitePointer;
 extern int *KingBlackPointer;
 
@@ -25,29 +23,35 @@ int current_move[DEPTH];
 
 
 Board old_position[DEPTH];
-int FigureWhiteCoord_old[DEPTH][16];
-int FigureBlackCoord_old[DEPTH][16];
 
 // Получаем все ходы
 void generate_moves(int depth, int current_player) {
 
     current_move[depth] = 0;
+
+    int cell, color, cell_color;
+
+    // какой цвет фигуры ещем
     if (current_player) {
-        for (int i = 0; i < 16; i++) {
-            if (FigureWhiteCoord256[i] != 0) {
-                get_moves(FigureWhiteCoord256[i], depth);
-            }
-        }
+        color = WHITE;
     } else {
-        for (int i = 0; i < 16; i++) {
-            if (FigureBlackCoord256[i] != 0) {
-                get_moves(FigureBlackCoord256[i], depth);
+        color = BLACK;
+    }
+
+    // сканируем доску на поисках фигуры
+    for (int i = 0; i < 8; i++) {
+        for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
+            if (position[j] != 0) {
+
+                cell = position[j];
+                cell_color = cell & MASK_COLOR;
+
+                if (cell_color == color) {
+                    get_moves(j, depth);
+                }
             }
         }
     }
-
-    return;
-
 }
 
 // Получаем ходы для каждой фигуры
@@ -72,8 +76,6 @@ void get_moves(int coord, int depth) {
 
             if (cell == CELL_EMPTY) {
 
-                //printf("1");
-                //if (!check_move_king(coord, view_coord)) // если ходит король, то надо смотреть, чтобы он ходил в незашахованную область
                 add_move(depth, coord, new_coord, MOVE_TYPE_SIMPLY);
             }
             {
@@ -90,15 +92,14 @@ void get_moves(int coord, int depth) {
         }
         // рокировки и прочее
     }
-    // ферз
+    // ферзь
     if (type == FIGURE_TYPE_QUEEN) {
 
         n = 0;
         while (QueenMove[n] != 0) {
 
             int new_coord = coord + QueenMove[n];
-            while (position[new_coord] == CELL_EMPTY)
-            {
+            while (position[new_coord] == CELL_EMPTY) {
                 add_move(depth, coord, new_coord, MOVE_TYPE_SIMPLY);
                 new_coord += QueenMove[n];
             }
@@ -118,8 +119,7 @@ void get_moves(int coord, int depth) {
         while (RookMove[n] != 0) {
 
             int new_coord = coord + RookMove[n];
-            while (position[new_coord] == CELL_EMPTY)
-            {
+            while (position[new_coord] == CELL_EMPTY) {
                 add_move(depth, coord, new_coord, MOVE_TYPE_SIMPLY);
                 new_coord += RookMove[n];
             }
@@ -139,8 +139,7 @@ void get_moves(int coord, int depth) {
         while (BishopMove[n] != 0) {
 
             int new_coord = coord + BishopMove[n];
-            while (position[new_coord] == CELL_EMPTY)
-            {
+            while (position[new_coord] == CELL_EMPTY) {
                 add_move(depth, coord, new_coord, MOVE_TYPE_SIMPLY);
                 new_coord += BishopMove[n];
             }
@@ -164,8 +163,7 @@ void get_moves(int coord, int depth) {
             if (cell == CELL_EMPTY)//можно ходить в эту клетку
             {
                 add_move(depth, coord, new_coord, MOVE_TYPE_SIMPLY);
-            }
-            else {
+            } else {
 
 
             }
@@ -174,51 +172,43 @@ void get_moves(int coord, int depth) {
         return;
     }
 
-    if (type==FIGURE_TYPE_PAWN)
-    {
+    if (type == FIGURE_TYPE_PAWN) {
 
-        if (color==WHITE)//если это белая пешка
+        if (color == WHITE)//если это белая пешка
         {
             //ход пешкой на одну клетку вперёд
-            if (position[coord+16]==CELL_EMPTY)
-            {
+            if (position[coord + 16] == CELL_EMPTY) {
                 // проверить 8 ряд и первый двойной ход
-                add_move(depth, coord, coord+16, MOVE_TYPE_SIMPLY);
+                add_move(depth, coord, coord + 16, MOVE_TYPE_SIMPLY);
             }
             //проверим, можно ли есть
-            cell=position[coord-1+16];
-            if ((cell&MASK_COLOR)==BLACK)
-            {
+            cell = position[coord - 1 + 16];
+            if ((cell & MASK_COLOR) == BLACK) {
                 // 8 ряд
-                add_move(depth, coord, coord-1+16, MOVE_TYPE_SIMPLY);
+                add_move(depth, coord, coord - 1 + 16, MOVE_TYPE_SIMPLY);
             }
-            cell=position[coord+1+16];
-            if ((cell&MASK_COLOR)==BLACK)
-            {
+            cell = position[coord + 1 + 16];
+            if ((cell & MASK_COLOR) == BLACK) {
                 // 8 ряд
-                add_move(depth, coord, coord+1+16, MOVE_TYPE_SIMPLY);
+                add_move(depth, coord, coord + 1 + 16, MOVE_TYPE_SIMPLY);
             }
-        }
-        else//если это чёрная пешка
+        } else//если это чёрная пешка
         {
             //ход пешкой на одну клетку вперёд
-            if (position[coord-16]==CELL_EMPTY)
-            {
+            if (position[coord - 16] == CELL_EMPTY) {
                 // проверить 8 ряд и первый двойной ход
-                add_move(depth, coord, coord-16, MOVE_TYPE_SIMPLY);
+                add_move(depth, coord, coord - 16, MOVE_TYPE_SIMPLY);
             }
             //проверим, можно ли есть
-            cell=position[coord-1-16];
-            if ((cell&MASK_COLOR)==BLACK)
-            {
+            cell = position[coord - 1 - 16];
+            if ((cell & MASK_COLOR) == BLACK) {
                 // 8 ряд
-                add_move(depth, coord, coord-1-16, MOVE_TYPE_SIMPLY);
+                add_move(depth, coord, coord - 1 - 16, MOVE_TYPE_SIMPLY);
             }
-            cell=position[coord+1-16];
-            if ((cell&MASK_COLOR)==BLACK)
-            {
+            cell = position[coord + 1 - 16];
+            if ((cell & MASK_COLOR) == BLACK) {
                 // 8 ряд
-                add_move(depth, coord, coord+1-16, MOVE_TYPE_SIMPLY);
+                add_move(depth, coord, coord + 1 - 16, MOVE_TYPE_SIMPLY);
             }
         }
 
@@ -261,37 +251,21 @@ int is_legal_move(int coord1, int coord2) {
     int color = cell & MASK_COLOR;
     int opponent_color = color ^MASK_COLOR;
 
-    if(color == WHITE) {
-        FigureWhiteCoord256[0] = coord2;
-    }
-    else {
-        FigureBlackCoord256[0] = coord2;
-    }
 
     if (king_is_checked(color)) {
 
+
         position[coord1] = cell;
         position[coord2] = cell2;
-
-        if(color == WHITE) {
-            FigureWhiteCoord256[0] = coord1;
-        }
-        else {
-            FigureBlackCoord256[0] = coord1;
-        }
 
         return 0;
-    } else {
+    }
+    else {
+
 
         position[coord1] = cell;
         position[coord2] = cell2;
 
-        if(color == WHITE) {
-            FigureWhiteCoord256[0] = coord1;
-        }
-        else {
-            FigureBlackCoord256[0] = coord1;
-        }
 
         return 1;
     }
@@ -300,29 +274,25 @@ int is_legal_move(int coord1, int coord2) {
 // проверяем зашахован ли в текущей пощиции король
 int king_is_checked(int color) {
 
-    if (color == WHITE) //проверка шаха для белого короля
-    {
-        for (int n = 0; n < 16; n++) {
+    int cell, cell_color;
+    color = color ^MASK_COLOR;
 
-            int coord = FigureBlackCoord256[n];
-            if (coord == 0)
-                continue;
-            if (check_king(coord))
-                return 1; //фигура шахует белого короля
-        }
-        return 0;
-    } else //проверка шаха для чёрного короля
-    {
-        for (int n = 0; n < 16; n++) {
 
-            int coord = FigureWhiteCoord256[n];
-            if (coord == 0)
-                continue;//фигуры нет
-            if (check_king(coord))
-                return 1; //фигура шахует белого короля
+    // сканируем доску на поисках фигуры
+    for (int i = 0; i < 8; i++) {
+        for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
+            if (position[j] != 0) {
+                cell = position[j];
+                cell_color = cell & MASK_COLOR;
+                if (cell_color == color) {
+                    if (check_king(j))
+                        return 1;
+                }
+            }
         }
-        return 0;
     }
+    return 0;
+
 }
 
 // сама реализцая проверки на шах
@@ -335,7 +305,8 @@ int check_king(int coord) {
     int opponent_color = color ^MASK_COLOR;
     int type = cell & MASK_TYPE;
 
-    int check_type;
+    int check_type, cell_color;
+
     // Король
     if (type == FIGURE_TYPE_KING) {
 
@@ -347,7 +318,7 @@ int check_king(int coord) {
 
             if (cell != CELL_EMPTY) {
 
-                check_type = cell & (MASK_TYPE);
+                check_type = cell & MASK_TYPE;
                 if (check_type == FIGURE_TYPE_KING) {
                     return 1;
                 }
@@ -356,10 +327,9 @@ int check_king(int coord) {
         }
         return 0;
     }
-    // королева
+    // ферзь
     if (type == FIGURE_TYPE_QUEEN) {
 
-        printf("sdf");
         n = 0;
         while (QueenMove[n] != 0) {
 
@@ -370,9 +340,10 @@ int check_king(int coord) {
             }
 
             cell = position[new_coord];
-            check_type = cell & (MASK_TYPE);
+            check_type = cell & MASK_TYPE;
+            cell_color = cell & MASK_COLOR;
 
-            if (check_type == FIGURE_TYPE_KING) {
+            if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
                 return 1;
             }
 
@@ -395,8 +366,9 @@ int check_king(int coord) {
 
             cell = position[new_coord];
             check_type = cell & (MASK_TYPE);
+            cell_color = cell & MASK_COLOR;
 
-            if (check_type == FIGURE_TYPE_KING) {
+            if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
                 return 1;
             }
         }
@@ -415,8 +387,9 @@ int check_king(int coord) {
 
             cell = position[new_coord];
             check_type = cell & (MASK_TYPE);
+            cell_color = cell & MASK_COLOR;
 
-            if (check_type == FIGURE_TYPE_KING) {
+            if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
                 return 1;
             }
 
@@ -432,9 +405,9 @@ int check_king(int coord) {
 
             int new_coord = coord + KnightMove[n];
             cell = position[new_coord];
+            cell_color = cell & MASK_COLOR;
 
-            check_type = cell & (MASK_TYPE);
-            if (check_type == FIGURE_TYPE_KING) {
+            if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
                 return 1;
             }
 
@@ -450,26 +423,35 @@ int check_king(int coord) {
 
             cell = position[coord - 1 + 16]; // поле слева от пешки
             check_type = cell & (MASK_TYPE);
-            if (check_type == FIGURE_TYPE_KING) {
+            cell_color = cell & MASK_COLOR;
+
+            if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
                 return 1;
             }
 
             cell = position[coord + 1 + 16]; // поле справа от пешки
             check_type = cell & (MASK_TYPE);
-            if (check_type == FIGURE_TYPE_KING) {
+            cell_color = cell & MASK_COLOR;
+
+            if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
                 return 1;
             }
-        } else {
+        }
+        else {
             //проверим, можно ли есть
             cell = position[coord - 1 - 16]; // поле слева от пешки
             check_type = cell & (MASK_TYPE);
-            if (check_type == FIGURE_TYPE_KING) {
+            cell_color = cell & MASK_COLOR;
+
+            if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
                 return 1;
             }
 
             cell = position[coord + 1 - 16]; // поле справа от пешки
             check_type = cell & (MASK_TYPE);
-            if (check_type == FIGURE_TYPE_KING) {
+            cell_color = cell & MASK_COLOR;
+
+            if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
                 return 1;
             }
         }
@@ -480,7 +462,6 @@ int check_king(int coord) {
 
 void make_move(MOVE move, int depth) { // делаем ход
 
-    //printf("dsfs");
     memcpy(old_position[depth], position, 200 * sizeof(int)); // скопировали старую позицию !!! переделай
 
     if (move.MoveType == MOVE_TYPE_SIMPLY) {
@@ -488,15 +469,6 @@ void make_move(MOVE move, int depth) { // делаем ход
         int cell = position[move.current_position];
         int type = cell & MASK_TYPE;
         int color = cell & MASK_COLOR;
-
-            if (color == WHITE) {
-
-                // переделать. много пешек может быть и хз что с ними делать 2 коня
-                FigureWhiteCoord256[type - 1] = move.next_position;
-            } else {
-
-                FigureBlackCoord256[type - 1] = move.next_position;
-            }
 
         // перемещаем клетку
         position[move.current_position] = 0;
@@ -511,14 +483,6 @@ void rollback_move(MOVE move, int depth) {
         int cell = position[move.next_position];
         int color = cell & MASK_COLOR;
         int type = cell & MASK_TYPE;
-
-        if (color == WHITE) {
-
-            FigureWhiteCoord256[type - 1] = move.current_position;
-        } else {
-
-            FigureBlackCoord256[type - 1] = move.current_position;
-        }
 
     }
 
