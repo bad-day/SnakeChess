@@ -71,7 +71,7 @@ int main() {
     // Считываем текущее время
     time1 = clock();
 
-    my_score(6, 0, 0, 1);
+    my_score(5, 0, 0, 1);
 
     time2 = clock();
 

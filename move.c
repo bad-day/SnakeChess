@@ -101,9 +101,6 @@ void get_moves(int coord, int depth) {
                         // Если поля для короля не бьют
                         if(is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
 
-                            position[coord] = cell | IS_MOVE; // говорим, что король ходил
-                            position[coord + 3] = is_rook | IS_MOVE; // ладья ходила
-
                             add_move(depth, coord, coord + 2, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O);
                         }
                     }
@@ -121,9 +118,6 @@ void get_moves(int coord, int depth) {
                         // Если поля для короля не бьют
                         if(is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
 
-                            position[coord] = cell | IS_MOVE; // говорим, что король ходил
-                            position[coord - 4] = is_rook | IS_MOVE; // ладья ходила
-
                             add_move(depth, coord, coord - 3, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O_0);
                         }
                     }
@@ -132,7 +126,6 @@ void get_moves(int coord, int depth) {
 
             n++;
         }
-        // рокировки и прочее
     }
     // ферзь
     if (type == FIGURE_TYPE_QUEEN) {
@@ -236,6 +229,8 @@ void get_moves(int coord, int depth) {
 
     if (type == FIGURE_TYPE_PAWN) {
 
+        is_moved = cell & MASK_MOVE;
+
         if (color == WHITE)//если это белая пешка
         {
             //ход пешкой на одну клетку вперёд
@@ -243,6 +238,9 @@ void get_moves(int coord, int depth) {
                 // проверить 8 ряд и первый двойной ход
                 add_move(depth, coord, coord - 16, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
 
+                if(is_moved != IS_MOVE) { // если пешка е ходила
+
+                }
             }
 
             //проверим, можно ли есть
@@ -305,8 +303,6 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
     // если ходит король, или не проверили позицию на шах
     // тут могут быть связки..
     if (!is_legal_move(current_coord, new_coord)){
-
-
         return;
     }
 
@@ -565,6 +561,9 @@ void make_move(MOVE move, int depth) { // делаем ход
         int king_cell = position[move.current_position];
         int rook_cell = position[move.current_position + 3];
 
+        position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
+        position[move.current_position - 4] = rook_cell | IS_MOVE; // ладья ходила
+
         position[move.current_position] = 0;
         position[move.current_position + 3] = 0;
         position[move.current_position + 2] = king_cell;
@@ -576,6 +575,9 @@ void make_move(MOVE move, int depth) { // делаем ход
 
         int king_cell = position[move.current_position];
         int rook_cell = position[move.current_position - 4];
+
+        position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
+        position[move.current_position - 4] = rook_cell | IS_MOVE; // ладья ходила
 
         position[move.current_position] = 0;
         position[move.current_position - 4] = 0;
