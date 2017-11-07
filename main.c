@@ -14,8 +14,8 @@ MOVE moves[DEPTH][200];//ходы фигурой
 int main() {
 
 
-    //test_board(position);
-    board_init(position);
+    test_board(position);
+    //board_init(position);
     //test_board2(position);
     board_print2(position);
 
@@ -29,7 +29,7 @@ int main() {
     int my_score(int depth, int alpha, int beta, int current_player) {
 
         if (depth == 0) { // дошли до листка
-            //board_print(position);
+            //board_print2(position);
             count_end_pos++;
             return 0;
         }
@@ -44,8 +44,13 @@ int main() {
             //printf(" %d \n", test);
             //printf(" %d %d", moves[depth][0].current_position, moves[depth][0].next_position);
 
+            if(king_is_checked(WHITE) || king_is_checked(BLACK)) {
+                //printf("Мат");
+            } else {
+                //printf("Пат");
+            }
+            //board_print2(position);
 
-            board_print2(position);
         }
         //printf("Количество ходов, сгенеренных: %d\n", test);
 
@@ -71,7 +76,7 @@ int main() {
     // Считываем текущее время
     time1 = clock();
 
-    my_score(5, 0, 0, 1);
+    my_score(9, 0, 0, 1);
 
     time2 = clock();
 

@@ -59,10 +59,10 @@ void test_board(Board board) {
             board[j] = 0;
     }
 
-    board[72] = FIGURE_TYPE_KING|WHITE;
+    board[72] = FIGURE_TYPE_KING|BLACK;
 
-    board[104] = FIGURE_TYPE_KING|BLACK;
-    board[107] = FIGURE_TYPE_QUEEN|BLACK;
+    board[104] = FIGURE_TYPE_KING|WHITE;
+    board[107] = FIGURE_TYPE_PAWN|WHITE;
 
 }
 
