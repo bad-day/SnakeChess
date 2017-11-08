@@ -5,11 +5,8 @@
 
 
 Board position; // global
-
-
-MOVE moves[DEPTH][200];//ходы фигурой
-
-
+MOVE moves[DEPTH][200]; //ходы фигурой
+int current_deep;
 
 int main() {
 
@@ -29,7 +26,7 @@ int main() {
     int my_score(int depth, int alpha, int beta, int current_player) {
 
         if (depth == 0) { // дошли до листка
-            //board_print2(position);
+            board_print2(position);
             count_end_pos++;
             return 0;
         }
@@ -37,20 +34,26 @@ int main() {
         //printf("Зашли генерить новые ходы, глубина %d\n", depth);
         generate_moves(depth, current_player); // поулчаем все ходы в moves[depth]
         int test = 0;
-        for ( test = 0; moves[depth][test].MoveType != -1; test++);
+        for (test = 0; moves[depth][test].MoveType != -1; test++);
 
-        if(test == 0) {
+        if (test == 0) {
 
             //printf(" %d \n", test);
             //printf(" %d %d", moves[depth][0].current_position, moves[depth][0].next_position);
 
-            if(king_is_checked(WHITE) || king_is_checked(BLACK)) {
+            if (king_is_checked(WHITE) || king_is_checked(BLACK)) {
                 //printf("Мат");
-            } else {
+                //print_all_tree(depth);
+            }
+            else {
+
                 //printf("Пат");
+                //board_print2(position);
+                //print_all_tree(depth);
+
             }
             //board_print2(position);
-
+            //print_all_tree();
         }
         //printf("Количество ходов, сгенеренных: %d\n", test);
 
@@ -60,7 +63,7 @@ int main() {
             make_move(moves[depth][i], depth); // тут меняется состояние доски
 
 
-                my_score(depth - 1, beta, alpha, !current_player);
+            my_score(depth - 1, beta, alpha, !current_player);
 
             rollback_move(moves[depth][i], depth); // возвращаем прежнюю доску
 
@@ -76,11 +79,11 @@ int main() {
     // Считываем текущее время
     time1 = clock();
 
-    my_score(9, 0, 0, 1);
+    my_score(current_deep = 2, 0, 0, 1);
 
     time2 = clock();
 
-    float diff = ((float)(time2 - time1) / 1000000.0 ) * 1000;
+    float diff = ((float) (time2 - time1) / 1000000.0) * 1000;
     printf("Время: %f \n", diff);
     printf("Количество листьев: %d", count_end_pos);
 

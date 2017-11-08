@@ -5,7 +5,7 @@
 #ifndef CHESS_MOVE_H
 #define CHESS_MOVE_H
 
-#define DEPTH 10
+#define DEPTH 25
 
 typedef enum MOVE_TYPE MOVE_TYPE;
 typedef struct MOVE MOVE;
@@ -16,9 +16,9 @@ enum MOVE_TYPE {
     MOVE_TYPE_EAT = 1,
     MOVE_TYPE_CASTLING_O_O = 2,
     MOVE_TYPE_CASTLING_O_O_0 = 3,
-    MOVE_TYPE_WHITE_PASSED_PAWN_EAT = 4,//взятие проходной пешки
-    MOVE_TYPE_BLACK_PASSED_PAWN_EAT = 5,//взятие проходной пешки
-    MOVE_TYPE_CONVERSION = 6,//превращение пешки
+    MOVE_TYPE_PASSED_PAWN_WHITE = 4,
+    MOVE_TYPE_PASSED_PAWN_BLACK = 5,
+    MOVE_TYPE_CONVERSION = 6,
 };
 
 struct MOVE {
@@ -53,4 +53,5 @@ int king_is_checked(int color);
 
 int is_legal_move(int coord1, int coord2);
 
+void print_all_tree(int deep);
 #endif //CHESS_MOVE_H

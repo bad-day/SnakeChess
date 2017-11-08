@@ -1,7 +1,6 @@
 //
 // Created by valera on 30.10.17.
 //
-#define DEPTH 10
 
 #ifndef CHESS_BOARD_H
 #define CHESS_BOARD_H
@@ -24,10 +23,8 @@
 #define MASK_BORDER 127
 
 #define IS_MOVE 256
-#define MASK_MOVE 255
+#define MASK_MOVE 256
 
-#define KING_CHECK 512
-#define MASK_KING_CHECK 511
 
 #define CELL_EMPTY 0
 
