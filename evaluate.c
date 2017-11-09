@@ -69,6 +69,8 @@ int evaluate(Board position, int player) {
         }
     }
 
-    return white - black;
-
+    if(player)
+        return white - black;
+    else
+        return -1*(white - black);
 }

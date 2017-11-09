@@ -54,11 +54,13 @@ void test_board(Board board) {
             board[j] = 0;
     }
 
-    board[68] = FIGURE_TYPE_KING | BLACK;
+    board[84] = FIGURE_TYPE_KING | BLACK;
     // board[168] = FIGURE_TYPE_PAWN | BLACK | IS_MOVE;
 
     board[102] = FIGURE_TYPE_KING | WHITE;
-    board[106] = FIGURE_TYPE_PAWN | WHITE | IS_MOVE;
+    //board[106] = FIGURE_TYPE_ROOK | WHITE;
+    //board[107] = FIGURE_TYPE_ROOK | WHITE;
+    board[90] = FIGURE_TYPE_PAWN | WHITE | IS_MOVE;
 
 }
 
