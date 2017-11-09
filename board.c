@@ -5,11 +5,6 @@
 #include <stdio.h>
 #include "board.h"
 
-extern int FigureWhiteCoord256[16];
-extern int FigureBlackCoord256[16];
-extern int *KingWhitePointer;
-extern int *KingBlackPointer;
-
 void board_init(Board board) {
 
     for (int i = 0; i < 256; i++) // set border flag
@@ -59,11 +54,11 @@ void test_board(Board board) {
             board[j] = 0;
     }
 
-    //board[70] = FIGURE_TYPE_KING | BLACK;
-    board[136] = FIGURE_TYPE_PAWN | BLACK | IS_MOVE;
+    board[68] = FIGURE_TYPE_KING | BLACK;
+    // board[168] = FIGURE_TYPE_PAWN | BLACK | IS_MOVE;
 
-    //board[102] = FIGURE_TYPE_KING | WHITE;
-    board[169] = FIGURE_TYPE_PAWN | WHITE ;
+    board[102] = FIGURE_TYPE_KING | WHITE;
+    board[106] = FIGURE_TYPE_PAWN | WHITE | IS_MOVE;
 
 }
 

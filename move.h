@@ -5,7 +5,7 @@
 #ifndef CHESS_MOVE_H
 #define CHESS_MOVE_H
 
-#define DEPTH 25
+#define DEPTH 100
 
 typedef enum MOVE_TYPE MOVE_TYPE;
 typedef struct MOVE MOVE;

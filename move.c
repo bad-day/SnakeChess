@@ -8,8 +8,6 @@
 #include "board.h"
 
 extern Board position;
-extern int *KingWhitePointer;
-extern int *KingBlackPointer;
 
 extern MOVE moves[DEPTH][200]; //ходы фигурой
 extern int current_deep;

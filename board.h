@@ -19,11 +19,11 @@
 #define BLACK 16
 #define MASK_COLOR (WHITE|BLACK)
 
-#define BORDER 128
-#define MASK_BORDER 127
+#define BORDER 32
+#define MASK_BORDER 32
 
-#define IS_MOVE 256
-#define MASK_MOVE 256
+#define IS_MOVE 64
+#define MASK_MOVE 64
 
 
 #define CELL_EMPTY 0
@@ -31,7 +31,6 @@
 
 typedef int Board[256];
 
-//void board_set(Board *board, int sq, int piece);
 void board_init(Board board);
 void test_board(Board board);
 void test_board2(Board board);
@@ -39,5 +38,5 @@ void board_print(Board board);
 void board_print2(Board board);
 void who_is_cell(Board board, int coord);
 
-extern Board position;
+
 #endif //CHESS_BOARD_H
