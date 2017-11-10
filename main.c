@@ -5,18 +5,19 @@
 #include "board.h"
 #include "move.h"
 #include "evaluate.h"
+#include "uci.h"
 
 Board position; // global
 MOVE moves[DEPTH][200]; //ходы фигурой
 
-MOVE out_move[2];
+MOVE out_move;
 int current_deep;
 
 int main() {
 
 
     //test_board(position);
-    //board_init(position);
+    board_init(position);
     //test_board2(position);
     //board_print2(position);
 
@@ -75,7 +76,7 @@ int main() {
                 score_best = score;              // обновляем  лучшую оценку
                 if (depth == current_deep) {
                     //printf(" %d %d %d\n", moves[depth][i].MoveType, moves[depth][i].current_position, moves[depth][i].next_position);
-                    out_move[0] = moves[depth][i];
+                    out_move = moves[depth][i];
                 }
 
             }
@@ -89,34 +90,14 @@ int main() {
     time_t time1, time2;
 
     // int player = 1; // ходят белые
-    //time1 = clock();
+
     // current_deep = 8;
     // int score = my_score(current_deep, -100, 100, player);
-
-    int player = 1;
-
-
 
 //    current_deep = 7;
 //    int score = my_score(current_deep, -100, 100, !player);
 //
 //    printf("Оценка: %d\n", score);
-
-    int deep = current_deep = 0;
-    while (current_deep > 1) {
-
-        int score = my_score(current_deep, -100, 100, player);
-        printf("Оценка: %d\n", score);
-
-        make_move(out_move[0], 0);
-        board_print2(position);
-
-        //printf(" %d %d %d %d %d\n", player, test, out_move[player].MoveType, out_move[player].current_position, out_move[player].next_position);
-
-        player = !player;
-        current_deep--;
-
-    }
 
     //board_print2(position);
     //printf("Оценка: %d\n", score);
@@ -124,55 +105,87 @@ int main() {
 
     //printf("Количество листьев: %d", count_end_pos);
 
-    char str1[] = "123";
-    char str2[100] ;
-
-
-
-    FILE *fp;
-    fp = fopen("log", "wb");
+    char input[100] ;
 
 
 
 
-    while(fgets(str2, 90, stdin)) {
 
-        if(strstr(str2, "uci")) {
+
+    while(fgets(input, 90, stdin)) {
+
+        if(strstr(input, "uci")) {
 
             printf("id name Demo_engine\n");
             printf("id author XXX\n");
             printf("uciok\n");
+            printf("position startpos\n");
 
         }
 
-        if(strstr(str2, "quit")) {
+        if(strstr(input, "quit")) {
 
-            printf("test\n");
+            printf("quit\n");
             return 0;
 
         }
 
-        if(strstr(str2, "isready")) {
+        if(strstr(input, "isready")) {
 
             printf("readyok\n");
 
         }
 
-        if(strstr(str2, "go ")) {
-            //info depth 1 score cp -1 time 10 nodes 26 nps 633 pv e7e6
-            //info depth 2 score cp -38 time 22 nodes 132 nps 2659 pv e7e6 e2e4
+        if(strstr(input, "go infinite")) {
+
+            int player = 1; // ходят белые
+            int deep = current_deep = 1;
+            while (current_deep < 8) {
+
+                time1 = clock();
+                int score = 100*my_score(current_deep, -100, 100, player);
+                time2 = clock();
+
+                if(player == 0) {
+                    score = -score;
+                }
+
+                int time_def = (int)((time2 - time1)/1000);
+
+                char best_move[100];
+                move_to_uci(out_move, best_move);
+
+
+                printf("info depth %d score cp %d time %d pv %s\n", current_deep, score, time_def, best_move);
+
+
+                fflush(stdout);
+                current_deep++;
+            }
 
 
             //printf("info depth 4 score cp -1 time 10 nodes 26 nps 633 pv e2e4\n");
-            printf("info depth 3 score cp -600 time 31 nodes 533 nps 10690 pv e2e4 d7d5 test\n");
+
             //printf("info depth 4 score cp -300 time 55 nodes 1292 nps 25606 pv d7d5 e2e3 e7e6 g1f3\n");
             //printf("bestmove e2e4\n");
 
         }
 
+        if(strstr(input, "position fen ")) {
+            // выставляем позицию, текущего игрока и пр
+
+
+            char changed[100];
+            strcpy(changed, &input[13]);
+
+            fen_to_board(changed);
+            //fen_to_board("rnb1kbnr/pp1ppppp/8/q1p5/4P3/2N3P1/PPPP1P1P/R1BQKBNR b KQkq - 0 3");
+        }
+
+
         fflush(stdout);
 
-        fwrite(str2, strlen(str2), 1, fp);
+
     }
 
 
