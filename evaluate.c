@@ -1,6 +1,7 @@
 //
 // Created by valera on 08.11.17.
 //
+#include <stdio.h>
 
 #include "board.h"
 #include "move.h"
@@ -8,6 +9,7 @@
 extern Board position;
 extern MOVE moves[DEPTH][200];
 
+int uci_status;
 int current_deep;
 MOVE out_move;
 
@@ -82,6 +84,15 @@ int evaluate(Board position, int player) {
 
 // Негамакс пока что
 int negamax(int depth, int alpha, int beta, int current_player) {
+
+    if(!uci_status) {
+
+        if(current_player)
+            return 1000;
+
+        return -1000;
+    }
+
 
     if (depth == 0) { // дошли до листка
         // count_end_pos++;

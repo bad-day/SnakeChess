@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "move.h"
 #include "board.h"
@@ -11,8 +12,12 @@
 
 extern Board position;
 extern int current_deep;
+extern int uci_status;
 
 MOVE out_move;
+
+pthread_t thread;
+int current_player;
 // загружаем доску в движок
 // проходную пешку подумай
 void fen_to_board(char *str) {
@@ -98,6 +103,22 @@ void get_position(int position, char *str) {
     str[1] = y + '0';
 }
 
+// !!!
+int get_current_payer(char *str) {
+
+    int i = 0;
+    for (int j = 0; j < 3; j++) {
+        while (str[i] != ' ') {
+            i++;
+        }
+    }
+
+
+    if (str[i + 1] == 'w') {
+        return 1;
+    }
+    return 0;
+}
 // довольно криво
 void move_to_uci(MOVE move, char *out) {
 
@@ -146,9 +167,37 @@ void move_to_uci(MOVE move, char *out) {
     }
 }
 
-void uci_listen() {
+void* start() {
 
     time_t time1, time2;
+
+    current_deep = 2;
+    uci_status = 1; // проверяется в глобальной перемсенной в алгоритме
+    while (current_deep < DEPTH) {
+
+        time1 = clock();
+        int score = 100*negamax(current_deep, -300, 300, current_player);
+        time2 = clock();
+
+        if(!current_player) {
+            score = -score;
+        }
+
+        int time_def = (int)((time2 - time1)/1000);
+
+        char best_move[100];
+        move_to_uci(out_move, best_move);
+
+        if(score != -1000 && score != 1000)
+            printf("info depth %d score cp %d time %d pv %s\n", current_deep, score, time_def, best_move);
+
+        fflush(stdout);
+        current_deep++;
+    }
+}
+
+void uci_listen() {
+
     char input[100] ;
     while(fgets(input, 90, stdin)) {
 
@@ -172,40 +221,28 @@ void uci_listen() {
 
         if(strstr(input, "go infinite")) {
 
-            int player = 1; // ходят белые
-            int deep = current_deep = 1;
-            while (current_deep < 8) {
-
-                time1 = clock();
-                int score = 100*negamax(current_deep, -100, 100, player);
-                time2 = clock();
-
-                if(player == 0) {
-                    score = -score;
-                }
-
-                int time_def = (int)((time2 - time1)/1000);
-
-                char best_move[100];
-                move_to_uci(out_move, best_move);
-
-                printf("info depth %d score cp %d time %d pv %s\n", current_deep, score, time_def, best_move);
-
-                fflush(stdout);
-                current_deep++;
-            }
-
+            pthread_create(&thread, NULL, start, NULL);
         }
 
         if(strstr(input, "position fen ")) {
+
+            uci_status = 0;
 
             char changed[100];
             strcpy(changed, &input[13]);
 
             fen_to_board(changed);
+
+
+            current_player = get_current_payer(changed);
+
             //fen_to_board("rnb1kbnr/pp1ppppp/8/q1p5/4P3/2N3P1/PPPP1P1P/R1BQKBNR b KQkq - 0 3");
         }
 
+        if(strstr(input, "stop")) {
+
+            uci_status = 0;
+        }
 
         fflush(stdout);
     }
