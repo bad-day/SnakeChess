@@ -11,6 +11,7 @@ typedef enum MOVE_TYPE MOVE_TYPE;
 typedef struct MOVE MOVE;
 //Типы ходов
 enum MOVE_TYPE {
+
     MOVE_TYPE_EMPTY = -1,
     MOVE_TYPE_SIMPLY = 0,
     MOVE_TYPE_EAT = 1,
@@ -22,16 +23,14 @@ enum MOVE_TYPE {
 };
 
 struct MOVE {
-    //начальна
-    // я позиция
+
     int current_position;
-    //конечная позиция
     int next_position;
-    MOVE_TYPE MoveType;//тип хода
-    int NewFigureType;//новый тип фигуры, если она получилась из пешки
-    int Coord256_PassedPawn;//ход проходной пешкой (если он есть. 0- проходной пешки нет)
-    int IsEat;//ход-взятие
-    //изменение веса хода (используем для сортировки ходов)
+    MOVE_TYPE MoveType; //тип хода
+    int NewFigureType; //новый тип фигуры, если она получилась из пешки
+    int Coord256_PassedPawn; //ход проходной пешкой (если он есть. 0- проходной пешки нет)
+    int IsEat; //ход-взятие
+     //изменение веса хода (используем для сортировки ходов)
     int Score;
     //указатель на следующий элемент
     MOVE *Move_Next;
@@ -54,4 +53,7 @@ int king_is_checked(int color);
 int is_legal_move(int coord1, int coord2);
 
 void print_all_tree(int deep);
+
+void move_init();
+
 #endif //CHESS_MOVE_H

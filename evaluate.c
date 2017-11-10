@@ -3,8 +3,13 @@
 //
 
 #include "board.h"
+#include "move.h"
 
-//extern Board position;
+extern Board position;
+extern MOVE moves[DEPTH][200];
+
+int current_deep;
+MOVE out_move;
 
 int evaluate(Board position, int player) {
 
@@ -73,4 +78,59 @@ int evaluate(Board position, int player) {
         return white - black;
     else
         return -1*(white - black);
+}
+
+// Негамакс пока что
+int negamax(int depth, int alpha, int beta, int current_player) {
+
+    if (depth == 0) { // дошли до листка
+        // count_end_pos++;
+        return evaluate(position, current_player);
+    }
+
+    int score_best;
+    int score;
+
+    score_best = -300;
+
+    generate_moves(depth, current_player); // поулчаем все ходы в moves[depth]
+
+    // checkmate
+    if (moves[depth][0].MoveType == -1) {
+
+        if (king_is_checked(WHITE)) {
+
+            return 200;
+        }
+        else if (king_is_checked(BLACK)) {
+
+            return -200;
+        }
+        else {
+
+            return 0;
+        }
+    }
+
+    // проходимся по новым ходам
+    for (int i = 0; moves[depth][i].MoveType != -1; i++) {
+
+        make_move(moves[depth][i], depth); // тут меняется состояние доски
+
+        score = -negamax(depth - 1, -beta, -alpha, !current_player);
+
+        rollback_move(moves[depth][i], depth); // возвращаем прежнюю доску
+
+        if (score > score_best) {
+            score_best = score;              // обновляем  лучшую оценку
+            if (depth == current_deep) {
+                out_move = moves[depth][i];
+            }
+
+        }
+
+        moves[depth][i].MoveType = -1;
+    }
+
+    return score_best;
 }

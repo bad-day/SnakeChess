@@ -8,5 +8,6 @@
 void fen_to_board(char* str);
 void move_to_uci(MOVE move, char* out);
 char* get_position(int position, char* str);
+void uci_listen();
 
 #endif //CHESS_UCI_H
