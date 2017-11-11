@@ -208,7 +208,7 @@ void get_moves(int coord, int depth) {
         }
         return;
     }
-    //конь
+
     if (type == FIGURE_TYPE_KNIGHT) {
 
         n = 0;
@@ -431,6 +431,7 @@ void get_moves(int coord, int depth) {
             }
         }
     }
+
 }
 
 // добавляем ход в массив
@@ -752,12 +753,12 @@ void make_move(MOVE move, int depth) { // делаем ход
         int rook_cell = position[move.current_position + 3];
 
         //position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
-        position[move.current_position - 4] = rook_cell | IS_MOVE; // ладья ходила
+        //position[move.current_position - 4] = rook_cell ; // ладья ходила
 
         position[move.current_position] = 0;
         position[move.current_position + 3] = 0;
         position[move.current_position + 2] = king_cell;
-        position[move.current_position + 1] = rook_cell;
+        position[move.current_position + 1] = rook_cell | IS_MOVE;
 
     }
 
@@ -767,12 +768,12 @@ void make_move(MOVE move, int depth) { // делаем ход
         int rook_cell = position[move.current_position - 4];
 
         //position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
-        position[move.current_position - 4] = rook_cell | IS_MOVE; // ладья ходила
+        //position[move.current_position - 4] = rook_cell | IS_MOVE; // ладья ходила
 
         position[move.current_position] = 0;
         position[move.current_position - 4] = 0;
         position[move.current_position - 2] = king_cell;
-        position[move.current_position - 1] = rook_cell;
+        position[move.current_position - 1] = rook_cell | IS_MOVE;
 
     }
 

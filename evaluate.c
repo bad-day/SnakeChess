@@ -11,7 +11,11 @@ extern MOVE moves[DEPTH][200];
 
 int uci_status;
 int current_deep;
+int ply;
 MOVE out_move;
+MOVE out_move2[2];
+
+int mini( int depth, int current_player);
 
 int evaluate(Board position, int player) {
 
@@ -76,33 +80,36 @@ int evaluate(Board position, int player) {
         }
     }
 
-    if(player)
+    return white - black;
+
+    if (player)
         return white - black;
     else
-        return -1*(white - black);
+        return -1 * (white - black);
 }
 
 // Негамакс пока что
-int negamax(int depth, int alpha, int beta, int current_player) {
+int negamax(int depth, int current_player) {
 
-    if(!uci_status) {
+    if (!uci_status) {
 
-        if(current_player)
+        if (current_player) {
             return 1000;
-
+        }
         return -1000;
     }
 
 
     if (depth == 0) { // дошли до листка
         // count_end_pos++;
+
         return evaluate(position, current_player);
+
     }
 
-    int score_best;
+    int score_best = -300;
     int score;
 
-    score_best = -300;
 
     generate_moves(depth, current_player); // поулчаем все ходы в moves[depth]
 
@@ -127,10 +134,13 @@ int negamax(int depth, int alpha, int beta, int current_player) {
     for (int i = 0; moves[depth][i].MoveType != -1; i++) {
 
         make_move(moves[depth][i], depth); // тут меняется состояние доски
+        ++ply;
 
-        score = -negamax(depth - 1, -beta, -alpha, !current_player);
+        score = -negamax(depth - 1, !current_player);
 
         rollback_move(moves[depth][i], depth); // возвращаем прежнюю доску
+
+        --ply;
 
         if (score > score_best) {
             score_best = score;              // обновляем  лучшую оценку
@@ -144,4 +154,158 @@ int negamax(int depth, int alpha, int beta, int current_player) {
     }
 
     return score_best;
+}
+
+int AlphaBetaPruning(int alpha, int beta, int depth, int current_player) {
+
+    int value;
+    generate_moves(depth, current_player);
+
+    for (int i = 0; moves[depth][i].MoveType != -1; i++) {
+
+        make_move(moves[depth][i], depth); // тут меняется состояние доски
+
+
+        if (depth > 1)
+
+            value = -AlphaBetaPruning(-beta, -alpha, depth - 1, current_player);
+        else
+            value = evaluate(position, current_player);
+
+
+        rollback_move(moves[depth][i], depth); // возвращаем прежнюю доску
+
+        if (value > alpha) {
+            out_move = moves[depth][i];
+            // This move is so good that caused a cutoff of rest tree
+            if (value >= beta)
+                return beta;
+            alpha = value;
+        }
+
+        moves[depth][i].MoveType = -1;
+    }
+
+    if (moves[depth][0].MoveType == -1) {
+
+        if (king_is_checked(WHITE)) {
+
+            return (-200);
+        }
+        else if (king_is_checked(BLACK)) {
+
+            return (200);
+        }
+        else {
+
+            return 0;
+        }
+    }
+
+    return alpha;
+}
+
+int test(int depth, int current_player) {
+
+    if (!uci_status) {
+
+        if (current_player) {
+            return 1000;
+        }
+        return -1000;
+    }
+
+
+}
+
+int maxi( int depth, int current_player) {
+
+    int score;
+    if ( depth == 0 ) return evaluate(position, current_player);
+    int max = -300;
+
+    moves[depth][0].MoveType = -1;
+    generate_moves(depth, current_player);
+
+
+    int count;
+    for (count = 0; moves[depth][count].MoveType != -1; count++);
+    //printf("count maxi %d\n", count);
+
+//    if (moves[depth][0].MoveType == -1) {
+//
+//        if (king_is_checked(WHITE)) {
+//
+//            return -200;
+//        }
+//        else if (king_is_checked(BLACK)) {
+//
+//            return 200;
+//        }
+//        else {
+//
+//            return 0;
+//        }
+//    }
+
+    for (int i = 0; moves[depth][i].MoveType != -1; i++) {
+
+        make_move(moves[depth][i], depth);
+        score = mini( depth - 1, !current_player);
+        rollback_move(moves[depth][i], depth);
+
+        if( score > max ) {
+            out_move2[1] = moves[depth][i];
+            max = score;
+        }
+
+    }
+
+    return max;
+}
+
+int mini( int depth, int current_player) {
+    int score;
+    if ( depth == 0 ) return -evaluate(position, current_player);
+    int min = 300;
+
+
+    moves[depth][0].MoveType = -1;
+    generate_moves(depth, current_player);
+
+
+    int count;
+    for (count = 0; moves[depth][count].MoveType != -1; count++);
+    //printf("count mini %d\n", count);
+
+//    if (moves[depth][0].MoveType == -1) {
+//
+//        if (king_is_checked(WHITE)) {
+//
+//            return -200;
+//        }
+//        else if (king_is_checked(BLACK)) {
+//
+//            return 200;
+//        }
+//        else {
+//
+//            return 0;
+//        }
+//    }
+
+    for (int i = 0; moves[depth][i].MoveType != -1; i++) {
+
+        make_move(moves[depth][i], depth);
+        score = maxi( depth - 1, !current_player);
+        rollback_move(moves[depth][i], depth);
+
+        if( score < min ) {
+            out_move2[0] = moves[depth][i];
+            min = score;
+        }
+
+    }
+
+    return min;
 }

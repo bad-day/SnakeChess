@@ -13,6 +13,7 @@
 extern Board position;
 extern int current_deep;
 extern int uci_status;
+extern int ply;
 
 MOVE out_move;
 
@@ -113,10 +114,10 @@ int get_current_payer(char *str) {
         }
     }
 
-
     if (str[i + 1] == 'w') {
         return 1;
     }
+
     return 0;
 }
 // довольно криво
@@ -175,8 +176,11 @@ void* start() {
     uci_status = 1; // проверяется в глобальной перемсенной в алгоритме
     while (current_deep < DEPTH) {
 
+
         time1 = clock();
-        int score = 100*negamax(current_deep, -300, 300, current_player);
+        int score = negamax(current_deep, -300, 300, current_player);
+        ply = 0;
+        //int score = 100* negamax( -200, 200, current_deep, current_player);
         time2 = clock();
 
         if(!current_player) {
@@ -189,7 +193,7 @@ void* start() {
         move_to_uci(out_move, best_move);
 
         if(score != -1000 && score != 1000)
-            printf("info depth %d score cp %d time %d pv %s\n", current_deep, score, time_def, best_move);
+            printf("info depth %d score cp %d time %d pv %s\n", current_deep, score*100, time_def, best_move);
 
         fflush(stdout);
         current_deep++;
@@ -236,7 +240,8 @@ void uci_listen() {
 
             current_player = get_current_payer(changed);
 
-            //fen_to_board("rnb1kbnr/pp1ppppp/8/q1p5/4P3/2N3P1/PPPP1P1P/R1BQKBNR b KQkq - 0 3");
+//            current_player = 1;
+//            fen_to_board("go infinite");
         }
 
         if(strstr(input, "stop")) {
@@ -244,6 +249,5 @@ void uci_listen() {
             uci_status = 0;
         }
 
-        fflush(stdout);
     }
 }
