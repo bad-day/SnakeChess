@@ -6,8 +6,10 @@
 #include <string.h>
 #include "move.h"
 #include "board.h"
+#include "evaluate.h"
 
 extern Board position;
+extern int current_deep;
 MOVE moves[DEPTH][200]; // все ходы фигурой для дерева
 
 // Все возможные ходы фигур
@@ -43,11 +45,20 @@ void generate_moves(int depth, int current_player) {
 
     // какой цвет фигуры ещем
     if (current_player) {
+
         color = WHITE;
     }
     else {
+
         color = BLACK;
     }
+
+    // если нет короля, соответственно мат
+    if(!king_isset(color)) {
+
+        return;
+    }
+
 
     // сканируем доску на поисках фигуры
     for (int i = 0; i < 8; i++) {
@@ -63,8 +74,31 @@ void generate_moves(int depth, int current_player) {
             }
         }
     }
+
 }
 
+// Есть ли король
+int king_isset(int color) {
+
+    int cell, type, cell_color;
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
+            if (position[j] != 0) {
+
+                cell = position[j];
+                cell_color = cell & MASK_COLOR;
+                type = cell & MASK_TYPE;
+
+                if (cell_color == color && type == FIGURE_TYPE_KING) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
 // Получаем ходы для каждой фигуры
 void get_moves(int coord, int depth) {
 
@@ -95,47 +129,47 @@ void get_moves(int coord, int depth) {
                 add_move(depth, coord, new_coord, FIGURE_TYPE_KING, MOVE_TYPE_EAT);
             }
 
-            is_moved = cell & MASK_MOVE;
+            n++;
+        }
 
-            // рокировки
-            if (is_moved != IS_MOVE) { // если король не ходил
+        // рокировки
+        cell = position[coord];
+        is_moved = cell & MASK_MOVE;
+        if (is_moved != IS_MOVE) { // если король не ходил
 
-                // короткая рокировка
-                if (position[coord + 1] == CELL_EMPTY && position[coord + 2] == CELL_EMPTY) {
-                    int is_rook = position[coord + 3];
-                    int type_is_rook = is_rook & MASK_TYPE;
-                    int rook_moved = is_rook & MASK_MOVE;
+            // короткая рокировка
+            if (position[coord + 1] == CELL_EMPTY && position[coord + 2] == CELL_EMPTY) {
+                int is_rook = position[coord + 3];
+                int type_is_rook = is_rook & MASK_TYPE;
+                int rook_moved = is_rook & MASK_MOVE;
 
-                    // Если ладья не ходила
-                    if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
-                        // Если поля для короля не бьют
-                        if (is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
+                // Если ладья не ходила
+                if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
+                    // Если поля для короля не бьют
+                    if (is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
 
-                            add_move(depth, coord, coord + 2, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O);
-                        }
-                    }
-                }
-
-                // длинная рокировка
-                if (position[coord - 1] == CELL_EMPTY && position[coord - 2] == CELL_EMPTY &&
-                    position[coord - 3] == CELL_EMPTY) { // если клетки пустые
-
-                    int is_rook = position[coord - 4];
-                    int type_is_rook = is_rook & MASK_TYPE;
-                    int rook_moved = is_rook & MASK_MOVE;
-
-                    // Если ладья не ходила
-                    if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
-                        // Если поля для короля не бьют
-                        if (is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
-
-                            add_move(depth, coord, coord - 3, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O_0);
-                        }
+                        add_move(depth, coord, coord + 2, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O);
                     }
                 }
             }
 
-            n++;
+            // длинная рокировка
+            if (position[coord - 1] == CELL_EMPTY && position[coord - 2] == CELL_EMPTY &&
+                position[coord - 3] == CELL_EMPTY) { // если клетки пустые
+
+                int is_rook = position[coord - 4];
+                int type_is_rook = is_rook & MASK_TYPE;
+                int rook_moved = is_rook & MASK_MOVE;
+
+                // Если ладья не ходила
+                if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
+                    // Если поля для короля не бьют
+                    if (is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
+
+                        add_move(depth, coord, coord - 3, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O_0);
+                    }
+                }
+            }
         }
     }
 
@@ -178,7 +212,7 @@ void get_moves(int coord, int depth) {
             cell_color = cell & MASK_COLOR;
             if (cell_color == opponent_color) {
 
-                position[coord] = cell | IS_MOVE; // ладья ходила
+                //position[coord] = cell | IS_MOVE; // ладья ходила
                 add_move(depth, coord, new_coord, FIGURE_TYPE_ROOK, MOVE_TYPE_EAT);
             }
             n++;
@@ -439,12 +473,15 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
 
     int cell = position[current_coord];
     int color = cell & MASK_COLOR;
+    int cell_type = cell & MASK_TYPE;
 
 
     // было бы неплохой оптимизацией делать это тошлько для короля и при шахах
     // подумай где хранить шах.
     // если ходит король, или не проверили позицию на шах
     // тут могут быть связки..
+
+    // по сути, чтобы отловить пат
     if (!is_legal_move(current_coord, new_coord)) {
 
         return;
@@ -711,10 +748,16 @@ int check_king(int coord) {
 // совершаем ход
 void make_move(MOVE move, int depth) { // делаем ход
 
-    memcpy(old_position[depth], position, 200 * sizeof(int)); // скопировали позицию до передвижений !!! переделай
+    memcpy(old_position[depth], position, 256 * sizeof(int)); // скопировали позицию до передвижений !!! переделай
 
     int cell = position[move.current_position];
-    position[move.current_position] = cell | IS_MOVE; // говорим. что фигура ходила
+    int new_cell = position[move.next_position];
+
+    //go infinite
+    // int type = cell & MASK_TYPE;
+
+
+    //position[move.current_position] = cell | IS_MOVE; // говорим. что фигура ходила
 
     // просто меняем позициб и обнулем
     if (move.MoveType == MOVE_TYPE_SIMPLY || move.MoveType == MOVE_TYPE_EAT) {
@@ -723,75 +766,75 @@ void make_move(MOVE move, int depth) { // делаем ход
         position[move.next_position] = cell;
     }
 
-    // берем черную проходную пешку
-    if (move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
-
-        position[move.current_position] = 0;
-        position[move.next_position] = 0 ;
-        position[move.next_position - 16] = cell ;
-    }
-
-    // берем черную проходную пешку
-    if (move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE) {
-
-        position[move.current_position] = 0;
-        position[move.next_position] = 0 ;
-        position[move.next_position + 16] = cell ;
-    }
-
-    // если пека превртилась, нужна вакцина. Но Эйли жива
-    if (move.MoveType == MOVE_TYPE_CONVERSION) {
-
-        int color = cell & MASK_COLOR;
-        position[move.current_position] = 0;
-        position[move.next_position] = move.NewFigureType | color;
-    }
-
-    if (move.MoveType == MOVE_TYPE_CASTLING_O_O) {
-
-        int king_cell = position[move.current_position];
-        int rook_cell = position[move.current_position + 3];
-
-        //position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
-        //position[move.current_position - 4] = rook_cell ; // ладья ходила
-
-        position[move.current_position] = 0;
-        position[move.current_position + 3] = 0;
-        position[move.current_position + 2] = king_cell;
-        position[move.current_position + 1] = rook_cell | IS_MOVE;
-
-    }
-
-    if (move.MoveType == MOVE_TYPE_CASTLING_O_O_0) {
-
-        int king_cell = position[move.current_position];
-        int rook_cell = position[move.current_position - 4];
-
-        //position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
-        //position[move.current_position - 4] = rook_cell | IS_MOVE; // ладья ходила
-
-        position[move.current_position] = 0;
-        position[move.current_position - 4] = 0;
-        position[move.current_position - 2] = king_cell;
-        position[move.current_position - 1] = rook_cell | IS_MOVE;
-
-    }
+//    // берем черную проходную пешку
+//    if (move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
+//
+//        position[move.current_position] = 0;
+//        position[move.next_position] = 0 ;
+//        position[move.next_position - 16] = cell ;
+//    }
+//
+//    // берем черную проходную пешку
+//    if (move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE) {
+//
+//        position[move.current_position] = 0;
+//        position[move.next_position] = 0 ;
+//        position[move.next_position + 16] = cell ;
+//    }
+//
+//    // если пека превртилась, нужна вакцина. Но Эйли жива
+//    if (move.MoveType == MOVE_TYPE_CONVERSION) {
+//
+//        int color = cell & MASK_COLOR;
+//        position[move.current_position] = 0;
+//        position[move.next_position] = move.NewFigureType | color;
+//    }
+//
+//    if (move.MoveType == MOVE_TYPE_CASTLING_O_O) {
+//
+//        int king_cell = position[move.current_position];
+//        int rook_cell = position[move.current_position + 3];
+//
+//        //position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
+//        //position[move.current_position - 4] = rook_cell ; // ладья ходила
+//
+//        position[move.current_position] = 0;
+//        position[move.current_position + 3] = 0;
+//        position[move.current_position + 2] = king_cell;
+//        position[move.current_position + 1] = rook_cell | IS_MOVE;
+//
+//    }
+//
+//    if (move.MoveType == MOVE_TYPE_CASTLING_O_O_0) {
+//
+//        int king_cell = position[move.current_position];
+//        int rook_cell = position[move.current_position - 4];
+//
+//        //position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
+//        //position[move.current_position - 4] = rook_cell | IS_MOVE; // ладья ходила
+//
+//        position[move.current_position] = 0;
+//        position[move.current_position - 4] = 0;
+//        position[move.current_position - 2] = king_cell;
+//        position[move.current_position - 1] = rook_cell | IS_MOVE;
+//
+//    }
 
 }
 
 // убираем ход
 void rollback_move(MOVE move, int depth) {
 
-    memcpy(position, &old_position[depth], 200 * sizeof(int)); // копируем старую позицию !!! переделай
+    memcpy(position, &old_position[depth], 256 * sizeof(int)); // копируем старую позицию !!! переделай
 }
 
 // дебаг, вывод всего дерева
 void print_all_tree(int deep) {
 
-//    for(int i = current_deep; i > deep; i--) {
-//
-//        board_print2(old_position[i]);
-//    }
-//
-//    board_print2(position);
+    for(int i = 3; i > deep; i--) {
+
+        board_print2(old_position[i]);
+    }
+
+    board_print2(position);
 }

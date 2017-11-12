@@ -54,13 +54,16 @@ void test_board(Board board) {
             board[j] = 0;
     }
 
-    board[84] = FIGURE_TYPE_KING | BLACK;
+
     // board[168] = FIGURE_TYPE_PAWN | BLACK | IS_MOVE;
 
-    board[102] = FIGURE_TYPE_KING | WHITE;
-    //board[106] = FIGURE_TYPE_ROOK | WHITE;
+    board[103] = FIGURE_TYPE_KING | BLACK;
+    board[100] = FIGURE_TYPE_ROOK | BLACK;
+
+    board[170] = FIGURE_TYPE_KING | WHITE;
+    board[155] = FIGURE_TYPE_ROOK | WHITE;
     //board[107] = FIGURE_TYPE_ROOK | WHITE;
-    board[90] = FIGURE_TYPE_PAWN | WHITE | IS_MOVE;
+    //board[90] = FIGURE_TYPE_PAWN | WHITE | IS_MOVE;
 
 }
 
@@ -100,7 +103,7 @@ void board_print(Board board) {
 }
 
 void board_print2(Board board) {
-    int cell, type;
+    int cell, type, color;
     for (int i = 64; i < 196; i++) {
 
         if (i % 16 == 0)
@@ -108,38 +111,79 @@ void board_print2(Board board) {
 
         cell = board[i];
         type = cell & MASK_TYPE;
-        if (cell != CELL_EMPTY) {
+        color = cell & MASK_COLOR;
 
-            switch (type) {
+        if(color == WHITE) {
+            if (cell != CELL_EMPTY) {
 
-                case FIGURE_TYPE_KING:
-                    printf("K ");
-                    break;
+                switch (type) {
 
-                case FIGURE_TYPE_QUEEN:
-                    printf("Q ");
-                    break;
+                    case FIGURE_TYPE_KING:
+                        printf("K ");
+                        break;
 
-                case FIGURE_TYPE_ROOK:
-                    printf("R ");
-                    break;
+                    case FIGURE_TYPE_QUEEN:
+                        printf("Q ");
+                        break;
 
-                case FIGURE_TYPE_KNIGHT:
-                    printf("N ");
-                    break;
+                    case FIGURE_TYPE_ROOK:
+                        printf("R ");
+                        break;
 
-                case FIGURE_TYPE_BISHOP:
-                    printf("B ");
-                    break;
+                    case FIGURE_TYPE_KNIGHT:
+                        printf("N ");
+                        break;
 
-                case FIGURE_TYPE_PAWN:
-                    printf("P ");
-                    break;
+                    case FIGURE_TYPE_BISHOP:
+                        printf("B ");
+                        break;
+
+                    case FIGURE_TYPE_PAWN:
+                        printf("P ");
+                        break;
+                }
+            }
+
+            else {
+                printf("%d ", board[i]);
             }
         }
         else {
-            printf("%d ", board[i]);
+            if (cell != CELL_EMPTY) {
+
+                switch (type) {
+
+                    case FIGURE_TYPE_KING:
+                        printf("k ");
+                        break;
+
+                    case FIGURE_TYPE_QUEEN:
+                        printf("q ");
+                        break;
+
+                    case FIGURE_TYPE_ROOK:
+                        printf("r ");
+                        break;
+
+                    case FIGURE_TYPE_KNIGHT:
+                        printf("n ");
+                        break;
+
+                    case FIGURE_TYPE_BISHOP:
+                        printf("b ");
+                        break;
+
+                    case FIGURE_TYPE_PAWN:
+                        printf("p ");
+                        break;
+                }
+            }
+
+            else {
+                printf("%d ", board[i]);
+            }
         }
+
 
     }
     printf("\n");

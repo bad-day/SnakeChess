@@ -56,4 +56,6 @@ void print_all_tree(int deep);
 
 void move_init();
 
+int king_isset(int color);
+
 #endif //CHESS_MOVE_H

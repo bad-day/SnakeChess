@@ -5,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "move.h"
 #include "board.h"
@@ -13,15 +14,29 @@
 extern Board position;
 extern int current_deep;
 extern int uci_status;
-extern int ply;
+extern MOVE out_move2[2];
 
 MOVE out_move;
 
 pthread_t thread;
 int current_player;
+
+char blitz_best_move[100];
+
 // загружаем доску в движок
 // проходную пешку подумай
 void fen_to_board(char *str) {
+
+
+
+    for (int i = 0; i < 256; i++) // set border flag
+        position[i] = BORDER;
+
+    // empty cell
+    for (int i = 0; i < 8; i++) {
+        for (int j = 68 + i * 16; j < 76 + i * 16; j++)
+            position[j] = 0;
+    }
 
     int arr[64];
     for (int i = 0, k = 0, z = 0; str[i] != 0 && str[i] != ' '; i++, k++) {
@@ -178,24 +193,58 @@ void* start() {
 
 
         time1 = clock();
-        int score = negamax(current_deep, -300, 300, current_player);
-        ply = 0;
+        //int score = negamax(current_deep, current_player);
+        int score =  my_score(current_deep, current_player);
         //int score = 100* negamax( -200, 200, current_deep, current_player);
         time2 = clock();
 
-        if(!current_player) {
-            score = -score;
-        }
+//        if(!current_player) {
+//            score = -score;
+//        }
 
         int time_def = (int)((time2 - time1)/1000);
 
         char best_move[100];
-        move_to_uci(out_move, best_move);
+        if(current_player) {
 
-        if(score != -1000 && score != 1000)
+            move_to_uci(out_move2[1], best_move);
+        }
+        else {
+            move_to_uci(out_move2[0], best_move);
+        }
+
+
+        if(score != -1000 && score != 1000) {
+            char buf[100];
             printf("info depth %d score cp %d time %d pv %s\n", current_deep, score*100, time_def, best_move);
+            printf("bestmove %s\n",  best_move);
+
+
+        }
+
 
         fflush(stdout);
+        current_deep++;
+    }
+}
+
+void* blitz() {
+
+    current_deep = 2;
+    uci_status = 1; // проверяется в глобальной перемсенной в алгоритме
+
+    while (current_deep < DEPTH) {
+
+        int score =  my_score(current_deep, current_player);
+
+        if(current_player) {
+
+            move_to_uci(out_move2[1], blitz_best_move);
+        }
+        else {
+            move_to_uci(out_move2[0], blitz_best_move);
+        }
+
         current_deep++;
     }
 }
@@ -203,7 +252,11 @@ void* start() {
 void uci_listen() {
 
     char input[100] ;
+    FILE *fp;
+
+
     while(fgets(input, 90, stdin)) {
+
 
         if(strstr(input, "uci")) {
 
@@ -228,6 +281,36 @@ void uci_listen() {
             pthread_create(&thread, NULL, start, NULL);
         }
 
+        if(strstr(input, "go movetime")) {
+
+            //printf("info depth 1 score cp 100 time 100 pv c7c5\n");
+
+            //current_player = 1;
+            //printf("bestmove c7c5");
+            //printf("bestmove e2e4 ponder c7c5");
+            //fflush(stdout);
+            //pthread_create(&thread, NULL, start, NULL);
+
+            time_t time1, time2;
+
+            pthread_create(&thread, NULL, blitz, NULL);
+            time1 = clock();
+
+            time2 = clock();
+            int time_def = (int)((time2 - time1)/1000);
+
+            while(time_def < 10000) {
+
+                sleep(1);
+                time2 = clock();
+                time_def = (int)((time2 - time1)/1000);
+            }
+
+            printf("bestmove %s\n", blitz_best_move);
+
+            uci_status = 0;
+        }
+
         if(strstr(input, "position fen ")) {
 
             uci_status = 0;
@@ -249,5 +332,10 @@ void uci_listen() {
             uci_status = 0;
         }
 
+        //board_print2(position);
+        fflush(stdout);
+        fp = fopen("log", "a");
+        fwrite(input, strlen(input), 1, fp);
+        fclose(fp);
     }
 }
