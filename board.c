@@ -45,6 +45,7 @@ void board_init(Board board) {
 }
 
 void test_board(Board board) {
+
     for (int i = 0; i < 256; i++) // set border flag
         board[i] = BORDER;
 

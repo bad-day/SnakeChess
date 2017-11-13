@@ -3,8 +3,11 @@
 //
 #include <stdio.h>
 
+
 #include "board.h"
 #include "move.h"
+#include "evaluate.h"
+#include "uci.h"
 
 extern Board position;
 extern MOVE moves[DEPTH][200];
@@ -15,9 +18,8 @@ int current_deep;
 MOVE out_move;
 MOVE out_move2[2];
 
-int mini( int depth, int current_player);
 
-int evaluate(Board position, int player) {
+int evaluate(int player) {
 
     int cell, type, color;
     int black = 0, white = 0;
@@ -32,10 +34,6 @@ int evaluate(Board position, int player) {
 
                 if (color == WHITE) {
                     switch (type) {
-
-                        case FIGURE_TYPE_KING:
-                            white += 200;
-                            break;
 
                         case FIGURE_TYPE_QUEEN:
                             white += 9;
@@ -60,10 +58,6 @@ int evaluate(Board position, int player) {
                 }
                 else {
                     switch (type) {
-
-                        case FIGURE_TYPE_KING:
-                            black += 200;
-                            break;
 
                         case FIGURE_TYPE_QUEEN:
                             black += 9;
@@ -90,35 +84,12 @@ int evaluate(Board position, int player) {
         }
     }
 
+    int mobility = get_max_count_move(1) - get_max_count_move(0);
 
-    if(white - black == 10 || white - black == -10) {
+    mobility = (int)(mobility / 5);
+    int material = white - black;
 
-        //printf("sdsfc %d %d \n", white, black);
-    }
-//
-//
-//        for (int i = 0; i < 8; i++) {
-//            for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
-//                if (position[j] != 0) {
-//
-//                    cell = position[j];
-//                    color = cell & MASK_COLOR;
-//                    type = cell & MASK_TYPE;
-//
-//                    if (color == WHITE) {
-//                        printf(" white %d\n", type);
-//                    }
-//                    else {
-//                        printf(" black %d\n", type);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-
-        //print_all_tree(0);
-
-    return white - black;
+    return material + mobility;
 
     if (player)
         return white - black;
@@ -141,7 +112,7 @@ int negamax(int depth, int current_player) {
     if (depth == 0) { // дошли до листка
         // count_end_pos++;
 
-        return evaluate(position, current_player);
+        return evaluate(current_player);
     }
 
     int score_best = -300;
@@ -204,7 +175,7 @@ int AlphaBetaPruning(int alpha, int beta, int depth, int current_player) {
 
             value = -AlphaBetaPruning(-beta, -alpha, depth - 1, current_player);
         else
-            value = evaluate(position, current_player);
+            value = evaluate(current_player);
 
 
         rollback_move(moves[depth][i], depth); // возвращаем прежнюю доску
@@ -257,7 +228,7 @@ int maxi( int depth, int current_player) {
     int score;
     if ( depth == 0 ) {
 
-        return evaluate(position, current_player);
+        return evaluate(current_player);
     }
 
     int max = -999999;
@@ -290,7 +261,7 @@ int maxi( int depth, int current_player) {
 int mini( int depth, int current_player) {
 
     int score;
-    if ( depth == 0 ) return -evaluate(position, current_player);
+    if ( depth == 0 ) return -evaluate( current_player);
     int min = 999999;
 
 
@@ -326,26 +297,26 @@ int my_score(int depth, int current_player) {
     if (!uci_status) {
 
         if (current_player) {
-            return 1000;
+            return UCI_EXIT;
         }
-        return -1000;
+        return (-UCI_EXIT);
     }
 
     int score_best;
     int score;
 
     if (current_player)
-        score_best = -500;
+        score_best = -(CHECKMATE) + depth;
     else
-        score_best = 500;
+        score_best = CHECKMATE - depth;
 
     // как-то проверить есть ли король
     // сразу подумай насчет пата
 
     if (depth == 0) { // дошли до листка
 
-
-        return evaluate(position, current_player);
+        //board_print2(position);
+        return evaluate(current_player);
     }
 
     generate_moves(depth, current_player); // поулчаем все ходы в moves[depth]
@@ -358,12 +329,12 @@ int my_score(int depth, int current_player) {
         // если мат белым
         if(current_player && (!king_isset(WHITE) || king_is_checked(WHITE)) ) {
 
-            return -500;
+            return -(CHECKMATE);
         }
 
         if(!current_player && (!king_isset(BLACK) || king_is_checked(BLACK)) ) {
 
-            return 500;
+            return CHECKMATE;
         }
 
         // пат
@@ -393,12 +364,8 @@ int my_score(int depth, int current_player) {
         }
         else { // минимизируем
 
-
-
-
             if (score < score_best) {
                 if (depth == current_deep) {
-                    //printf("TEST");
                     out_move2[0] = moves[depth][i];
                 }
 

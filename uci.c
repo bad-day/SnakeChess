@@ -7,14 +7,18 @@
 #include <pthread.h>
 #include <unistd.h>
 
+
 #include "move.h"
 #include "board.h"
 #include "evaluate.h"
+#include "uci.h"
 
 extern Board position;
 extern int current_deep;
 extern int uci_status;
 extern MOVE out_move2[2];
+
+extern int pawn_passed_uci;
 
 MOVE out_move;
 
@@ -26,8 +30,6 @@ char blitz_best_move[100];
 // загружаем доску в движок
 // проходную пешку подумай
 void fen_to_board(char *str) {
-
-
 
     for (int i = 0; i < 256; i++) // set border flag
         position[i] = BORDER;
@@ -50,7 +52,7 @@ void fen_to_board(char *str) {
 
         // black
         if (str[i] == 'r') {
-            arr[k] = FIGURE_TYPE_ROOK | BLACK;
+            arr[k] = FIGURE_TYPE_ROOK | BLACK | IS_MOVE;
         }
         if (str[i] == 'n') {
             arr[k] = FIGURE_TYPE_KNIGHT | BLACK;
@@ -65,7 +67,7 @@ void fen_to_board(char *str) {
             arr[k] = FIGURE_TYPE_KING | BLACK;
         }
         if (str[i] == 'p') {
-            if (z == 1)
+            if (z == 1) // Если на исходной позиции
                 arr[k] = FIGURE_TYPE_PAWN | BLACK;
             else
                 arr[k] = FIGURE_TYPE_PAWN | BLACK | IS_MOVE;
@@ -73,7 +75,7 @@ void fen_to_board(char *str) {
 
         // white
         if (str[i] == 'R') {
-            arr[k] = FIGURE_TYPE_ROOK | WHITE;
+            arr[k] = FIGURE_TYPE_ROOK | WHITE | IS_MOVE;
         }
         if (str[i] == 'N') {
             arr[k] = FIGURE_TYPE_KNIGHT | WHITE;
@@ -88,7 +90,7 @@ void fen_to_board(char *str) {
             arr[k] = FIGURE_TYPE_KING | WHITE;
         }
         if (str[i] == 'P') {
-            if (z == 6)
+            if (z == 6) // Если на исходной позиции
                 arr[k] = FIGURE_TYPE_PAWN | WHITE;
             else
                 arr[k] = FIGURE_TYPE_PAWN | WHITE | IS_MOVE;
@@ -106,6 +108,75 @@ void fen_to_board(char *str) {
             position[j] = arr[k];
         }
     }
+
+    // Утсанавливаем текущего игрока текущего игрока
+    int i = 0;
+
+    while (str[i] != ' ') {
+        i++;
+    }
+
+    if (str[i + 1] == 'w') {
+        current_player = 1;
+    }
+    else {
+        current_player = 0;
+    }
+
+
+    i+=3;
+    // до следущего пробела,
+    while (str[i] != ' ') {
+
+
+        // белым разрешена длинная рокировка
+        if(str[i] == 'K') {
+            if(position[187] != 0)
+                position[187] = FIGURE_TYPE_ROOK | WHITE;
+        }
+        // белым разрешена короткая рокировка
+        if(str[i] == 'Q') {
+            if(position[180] != 0)
+                position[180] = FIGURE_TYPE_ROOK | WHITE;
+        }
+
+        // белым разрешена длинная рокировка
+        if(str[i] == 'k') {
+            if(position[75] != 0)
+                position[75] = FIGURE_TYPE_ROOK | BLACK;
+        }
+        // белым разрешена короткая рокировка
+        if(str[i] == 'q') {
+            if(position[68] != 0)
+                position[68] = FIGURE_TYPE_ROOK | BLACK;
+        }
+
+        i++;
+    }
+
+    i++;
+
+    if(str[i] != '-') {
+
+        int passed_pawn_coord = uci_to_coord(str[i], str[i+1]);
+        if(passed_pawn_coord < 112) {
+            int cell = position[passed_pawn_coord + 16];
+            position[passed_pawn_coord + 16] = cell | IS_PASSED_PAWN_UCI;
+        }
+        else {
+            int cell = position[passed_pawn_coord - 16];
+            position[passed_pawn_coord - 16] = cell | IS_PASSED_PAWN_UCI;
+        }
+    }
+}
+
+int uci_to_coord(char a, char b) {
+
+    int coord = 180;
+    coord = coord + a - 'a'; // добавили по иксу
+    coord = coord + ('1' - b)*16 ; // добавили по y
+
+    return coord;
 }
 
 void get_position(int position, char *str) {
@@ -121,17 +192,6 @@ void get_position(int position, char *str) {
 
 // !!!
 int get_current_payer(char *str) {
-
-    int i = 0;
-    for (int j = 0; j < 3; j++) {
-        while (str[i] != ' ') {
-            i++;
-        }
-    }
-
-    if (str[i + 1] == 'w') {
-        return 1;
-    }
 
     return 0;
 }
@@ -191,7 +251,6 @@ void* start() {
     uci_status = 1; // проверяется в глобальной перемсенной в алгоритме
     while (current_deep < DEPTH) {
 
-
         time1 = clock();
         //int score = negamax(current_deep, current_player);
         int score =  my_score(current_deep, current_player);
@@ -214,7 +273,7 @@ void* start() {
         }
 
 
-        if(score != -1000 && score != 1000) {
+        if(score != -(UCI_EXIT) && score != UCI_EXIT) {
             char buf[100];
             printf("info depth %d score cp %d time %d pv %s\n", current_deep, score*100, time_def, best_move);
             printf("bestmove %s\n",  best_move);
@@ -319,9 +378,9 @@ void uci_listen() {
             strcpy(changed, &input[13]);
 
             fen_to_board(changed);
+            board_print2(position);
 
-
-            current_player = get_current_payer(changed);
+            //current_player = get_current_payer(changed);
 
 //            current_player = 1;
 //            fen_to_board("go infinite");

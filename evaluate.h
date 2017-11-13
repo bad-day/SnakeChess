@@ -5,11 +5,12 @@
 #ifndef CHESS_EVALUATE_H
 #define CHESS_EVALUATE_H
 
+#define CHECKMATE 500
 // пока мегамакс
 int negamax(int depth, int current_player);
 
 // анализ листьев
-int evaluate(Board position, int player);
+int evaluate(int player);
 
 int AlphaBetaPruning (int alpha, int beta, int depth, int current_player);
 

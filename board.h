@@ -25,6 +25,8 @@
 #define IS_MOVE 64
 #define MASK_MOVE 64
 
+#define IS_PASSED_PAWN_UCI 128
+#define MASK_PASSED_PAWN_UCI 128
 
 #define CELL_EMPTY 0
 

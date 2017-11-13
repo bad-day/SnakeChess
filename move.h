@@ -58,4 +58,8 @@ void move_init();
 
 int king_isset(int color);
 
+int get_max_count_move(int current_player);
+
+int get_count_moves(int coord);
+
 #endif //CHESS_MOVE_H
