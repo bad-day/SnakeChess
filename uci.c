@@ -1,34 +1,30 @@
 //
 // Created by valera on 10.11.17.
 //
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
 #include <unistd.h>
 
-
 #include "move.h"
 #include "board.h"
-#include "evaluate.h"
+#include "algorithms.h"
 #include "uci.h"
 
-extern Board position;
-extern int current_deep;
-extern int uci_status;
-extern MOVE out_move2[2];
+extern Board position; // main.c
 
-extern int pawn_passed_uci;
+pthread_t thread; // для потоков
 
-MOVE out_move;
+int uci_work_status = 0;
+int current_player = 1; // текущее состояние игрока
+int max_current_deep; // максимальная глубина
 
-pthread_t thread;
-int current_player;
-
+MOVE out_move[2]; // для вывода
 char blitz_best_move[100];
 
 // загружаем доску в движок
-// проходную пешку подумай
 void fen_to_board(char *str) {
 
     for (int i = 0; i < 256; i++) // set border flag
@@ -170,6 +166,7 @@ void fen_to_board(char *str) {
     }
 }
 
+// преобразуем координаты вида e2, h7 в 256
 int uci_to_coord(char a, char b) {
 
     int coord = 180;
@@ -179,6 +176,7 @@ int uci_to_coord(char a, char b) {
     return coord;
 }
 
+// преобразуем координаты вида 256 в e2, e4
 void get_position(int position, char *str) {
 
     position = position - 64;
@@ -190,12 +188,7 @@ void get_position(int position, char *str) {
     str[1] = y + '0';
 }
 
-// !!!
-int get_current_payer(char *str) {
-
-    return 0;
-}
-// довольно криво
+// преобразуем MOVE в координаты вида e2, h7
 void move_to_uci(MOVE move, char *out) {
 
     // получаем координату в нашеим виде e2
@@ -243,79 +236,74 @@ void move_to_uci(MOVE move, char *out) {
     }
 }
 
+// поток для бесконечного анализа
 void* start() {
 
     time_t time1, time2;
 
-    current_deep = 2;
-    uci_status = 1; // проверяется в глобальной перемсенной в алгоритме
-    while (current_deep < DEPTH) {
+    max_current_deep = 2;
+    uci_work_status = 1; // проверяется в глобальной перемсенной в алгоритме
+    while (max_current_deep < DEPTH) {
 
         time1 = clock();
-        //int score = negamax(current_deep, current_player);
-        int score =  my_score(current_deep, current_player);
-        //int score = 100* negamax( -200, 200, current_deep, current_player);
+
+        int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
+
         time2 = clock();
 
-//        if(!current_player) {
-//            score = -score;
-//        }
-
-        int time_def = (int)((time2 - time1)/1000);
+        int time_def = (int)((time2 - time1)/1000); // засекаем время
 
         char best_move[100];
         if(current_player) {
 
-            move_to_uci(out_move2[1], best_move);
+            move_to_uci(out_move[1], best_move);
         }
         else {
-            move_to_uci(out_move2[0], best_move);
+
+            move_to_uci(out_move[0], best_move);
         }
 
+        if(score != -UCI_EXIT && score != UCI_EXIT) {
 
-        if(score != -(UCI_EXIT) && score != UCI_EXIT) {
             char buf[100];
-            printf("info depth %d score cp %d time %d pv %s\n", current_deep, score*100, time_def, best_move);
+            printf("info depth %d score cp %d time %d pv %s\n", max_current_deep, score, time_def, best_move);
             printf("bestmove %s\n",  best_move);
-
-
         }
-
 
         fflush(stdout);
-        current_deep++;
+        max_current_deep++;
     }
 }
 
+// поток для блица
 void* blitz() {
 
-    current_deep = 2;
-    uci_status = 1; // проверяется в глобальной перемсенной в алгоритме
+    max_current_deep = 2;
+    uci_work_status = 1; // проверяется в глобальной перемсенной в алгоритме
 
-    while (current_deep < DEPTH) {
+    while (max_current_deep < DEPTH) {
 
-        int score =  my_score(current_deep, current_player);
+        int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
 
         if(current_player) {
 
-            move_to_uci(out_move2[1], blitz_best_move);
+            move_to_uci(out_move[1], blitz_best_move);
         }
         else {
-            move_to_uci(out_move2[0], blitz_best_move);
+            move_to_uci(out_move[0], blitz_best_move);
         }
 
-        current_deep++;
+        max_current_deep++;
     }
 }
 
+// слушаем что говорит нам gui
 void uci_listen() {
 
     char input[100] ;
-    FILE *fp;
-
+    //FILE *fp;
 
     while(fgets(input, 90, stdin)) {
-
 
         if(strstr(input, "uci")) {
 
@@ -342,14 +330,6 @@ void uci_listen() {
 
         if(strstr(input, "go movetime")) {
 
-            //printf("info depth 1 score cp 100 time 100 pv c7c5\n");
-
-            //current_player = 1;
-            //printf("bestmove c7c5");
-            //printf("bestmove e2e4 ponder c7c5");
-            //fflush(stdout);
-            //pthread_create(&thread, NULL, start, NULL);
-
             time_t time1, time2;
 
             pthread_create(&thread, NULL, blitz, NULL);
@@ -358,7 +338,7 @@ void uci_listen() {
             time2 = clock();
             int time_def = (int)((time2 - time1)/1000);
 
-            while(time_def < 10000) {
+            while(time_def < 8000) {
 
                 sleep(1);
                 time2 = clock();
@@ -367,12 +347,12 @@ void uci_listen() {
 
             printf("bestmove %s\n", blitz_best_move);
 
-            uci_status = 0;
+            uci_work_status = 0;
         }
 
         if(strstr(input, "position fen ")) {
 
-            uci_status = 0;
+            uci_work_status = 0;
 
             char changed[100];
             strcpy(changed, &input[13]);
@@ -380,21 +360,16 @@ void uci_listen() {
             fen_to_board(changed);
             board_print2(position);
 
-            //current_player = get_current_payer(changed);
-
-//            current_player = 1;
-//            fen_to_board("go infinite");
         }
 
         if(strstr(input, "stop")) {
 
-            uci_status = 0;
+            uci_work_status = 0;
         }
 
-        //board_print2(position);
         fflush(stdout);
-        fp = fopen("log", "a");
-        fwrite(input, strlen(input), 1, fp);
-        fclose(fp);
+        //fp = fopen("log", "a");
+        //fwrite(input, strlen(input), 1, fp);
+        //fclose(fp);
     }
 }

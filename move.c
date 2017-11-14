@@ -4,12 +4,11 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include "move.h"
 #include "board.h"
-#include "evaluate.h"
 
-extern Board position;
-extern int current_deep;
+extern Board position; // main.c
 MOVE moves[DEPTH][200]; // все ходы фигурой для дерева
 
 // Все возможные ходы фигур
@@ -23,17 +22,14 @@ int KnightMove[9] = {32 + 1, 32 - 1, 16 + 2, 16 - 2, -(32 + 1), -(32 - 1), -(16 
 Board old_position[DEPTH];
 
 // счетчих хранимых ходов на текущей глубине moves[DEPTH]
-// можно, кстати, его в альфа бете использовать
 int current_move[DEPTH];
-
-int pawn_passed_uci = 0;
-
 
 // инициализируем
 void move_init() {
 
     for (int i = 0; i < DEPTH; i++) {
         for (int j = 0; j < 200; j++) {
+
             moves[i][j].MoveType = -1;
         }
     }
@@ -95,6 +91,7 @@ int king_isset(int color) {
 
     return 0;
 }
+
 // Получаем ходы для каждой фигуры
 void get_moves(int coord, int depth) {
 
@@ -724,12 +721,12 @@ void make_move(MOVE move, int depth) {
     position[move.current_position] = cell | IS_MOVE; // говорим. что фигура ходила
 
 
-    if(cell_type == FIGURE_TYPE_PAWN) {
+    if (cell_type == FIGURE_TYPE_PAWN) {
 
         cell = cell ^ MASK_PASSED_PAWN_UCI; // если была проходная, то снимаем
 
         // если сходили пешкой на 2 хода, может можно сделать IS_MOVE
-        if(move.current_position - move.next_position == 32 || move.current_position - move.next_position == -32) {
+        if (move.current_position - move.next_position == 32 || move.current_position - move.next_position == -32) {
 
             cell = cell | MASK_PASSED_PAWN_UCI;
         }
@@ -747,16 +744,16 @@ void make_move(MOVE move, int depth) {
     if (move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
 
         position[move.current_position] = 0;
-        position[move.next_position] = 0 ;
-        position[move.next_position - 16] = cell ;
+        position[move.next_position] = 0;
+        position[move.next_position - 16] = cell;
     }
 
     // берем черную проходную пешку
     if (move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE) {
 
         position[move.current_position] = 0;
-        position[move.next_position] = 0 ;
-        position[move.next_position + 16] = cell ;
+        position[move.next_position] = 0;
+        position[move.next_position + 16] = cell;
     }
 
     // если пека превртилась, нужна вакцина. Но Эйли жива
@@ -808,7 +805,7 @@ void rollback_move(MOVE move, int depth) {
 // дебаг, вывод всего дерева
 void print_all_tree(int deep) {
 
-    for(int i = 3; i > deep; i--) {
+    for (int i = 3; i > deep; i--) {
 
         board_print2(old_position[i]);
     }
@@ -820,10 +817,8 @@ void print_all_tree(int deep) {
 int get_max_count_move(int current_player) {
 
     int count = 0;
-
     int cell, color, cell_color;
 
-    // какой цвет фигуры ещем
     if (current_player) {
 
         color = WHITE;
@@ -844,7 +839,6 @@ int get_max_count_move(int current_player) {
                 if (cell_color == color) {
 
                     count += get_count_moves(j);
-
                 }
             }
         }
@@ -853,11 +847,10 @@ int get_max_count_move(int current_player) {
     return count;
 }
 
+// получаем количество ходов для отдельной фигуры
 int get_count_moves(int coord) {
 
-    //board_print2(position);
     int count = 0;
-
 
     int n = 0;
     int cell = position[coord];
@@ -869,8 +862,6 @@ int get_count_moves(int coord) {
     int cell_color, is_moved, is_passed;
     // король
     if (type == FIGURE_TYPE_KING) {
-
-
 
         n = 0;
         while (KingMove[n] != 0) {
@@ -1173,7 +1164,5 @@ int get_count_moves(int coord) {
         }
     }
 
-    //printf("%d\n", count);
     return count;
-
 }

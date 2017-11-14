@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "board.h"
 
+// инициализация доски
 void board_init(Board board) {
 
     for (int i = 0; i < 256; i++) // set border flag
@@ -44,6 +45,7 @@ void board_init(Board board) {
 
 }
 
+// тестовая доска
 void test_board(Board board) {
 
     for (int i = 0; i < 256; i++) // set border flag
@@ -68,6 +70,7 @@ void test_board(Board board) {
 
 }
 
+// еще одна тестовая доска
 void test_board2(Board board) {
     for (int i = 0; i < 256; i++) // set border flag
         board[i] = BORDER;
@@ -91,6 +94,7 @@ void test_board2(Board board) {
 
 }
 
+// вывод доски "как есть"
 void board_print(Board board) {
     for (int i = 0; i < 256; i++) {
 
@@ -103,6 +107,7 @@ void board_print(Board board) {
     printf("\n");
 }
 
+// user-friendly вывод доски
 void board_print2(Board board) {
     int cell, type, color;
     for (int i = 64; i < 196; i++) {
@@ -114,7 +119,7 @@ void board_print2(Board board) {
         type = cell & MASK_TYPE;
         color = cell & MASK_COLOR;
 
-        if(color == WHITE) {
+        if (color == WHITE) {
             if (cell != CELL_EMPTY) {
 
                 switch (type) {
@@ -190,6 +195,7 @@ void board_print2(Board board) {
     printf("\n");
 }
 
+// что за фигура на доске
 void who_is_cell(Board board, int coord) {
 
     int cell = board[coord];
