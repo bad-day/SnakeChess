@@ -5,7 +5,7 @@
 #ifndef CHESS_EVALUATE_H
 #define CHESS_EVALUATE_H
 
-#define CHECKMATE 5000
+#define CHECKMATE 50000
 
 // анализ листьев
 int evaluate(int player);

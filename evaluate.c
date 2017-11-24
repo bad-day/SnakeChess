@@ -6,6 +6,7 @@
 
 #include "board.h"
 #include "evaluate.h"
+#include "move.h"
 
 extern Board position; // main.c
 
@@ -75,9 +76,9 @@ int evaluate(int player) {
         }
     }
 
-    //int mobility = get_max_count_move(1) - get_max_count_move(0);
+    int mobility = get_max_count_move(1) - get_max_count_move(0);
 
-    int mobility = 0;
+    //int mobility = 0;
     int material = white - black;
 
     return material + 5 * mobility;

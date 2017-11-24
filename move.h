@@ -42,6 +42,8 @@ void get_moves(int coord, int depth);
 
 void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE_TYPE type);
 
+void sort_move(int depth);
+
 void make_move(MOVE move, int depth);
 
 void rollback_move(MOVE move, int depth);

@@ -241,13 +241,19 @@ void* start() {
 
     time_t time1, time2;
 
-    max_current_deep = 2;
+    max_current_deep = 1;
     uci_work_status = 1; // проверяется в глобальной перемсенной в алгоритме
     while (max_current_deep < DEPTH) {
 
         time1 = clock();
 
-        int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
+        //int score = alpha_beta(-999999, 999999, max_current_deep + 50, current_player); // фикс
+        //int score = minimax(max_current_deep, current_player); // фик
+
+        int score = my_alpha(-999999, 999999, max_current_deep, current_player); // фикс
+
+
+
 
         time2 = clock();
 
@@ -260,15 +266,17 @@ void* start() {
         }
         else {
 
+            //score *= -1;
             move_to_uci(out_move[0], best_move);
         }
 
-        if(score != -UCI_EXIT && score != UCI_EXIT) {
+        // тут баг
+        //if(score != -UCI_EXIT && score != UCI_EXIT) {
 
             char buf[100];
             printf("info depth %d score cp %d time %d pv %s\n", max_current_deep, score, time_def, best_move);
             printf("bestmove %s\n",  best_move);
-        }
+        //}
 
         fflush(stdout);
         max_current_deep++;
@@ -323,7 +331,7 @@ void uci_listen() {
             printf("readyok\n");
         }
 
-        if(strstr(input, "go infinite")) {
+        if(strstr(input, "go")) {
 
             pthread_create(&thread, NULL, start, NULL);
         }

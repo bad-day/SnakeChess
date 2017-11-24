@@ -3,6 +3,7 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "move.h"
@@ -39,6 +40,10 @@ void move_init() {
 void generate_moves(int depth, int current_player) {
 
     current_move[depth] = 0;
+
+    for(int i = 0; i < 200; i++) {
+        moves[depth][i].MoveType = -1;
+    }
 
     int cell, color, cell_color;
 
@@ -450,6 +455,8 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
         return;
     }
 
+    // сортануть ходы, сначала взятие
+
     moves[depth][current_move[depth]].current_position = current_coord;
     moves[depth][current_move[depth]].next_position = new_coord;
 
@@ -461,6 +468,28 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
     }
 
     current_move[depth]++;
+}
+
+void sort_move(int depth) {
+
+    int max = current_move[depth];
+
+   // qsort();
+    // туопй
+    for(int i = 0 ; i < max - 1; i++) {
+        // сравниваем два соседних элемента.
+        for(int j = 0 ; j < max - i - 1 ; j++) {
+
+            if(moves[depth][j].MoveType < moves[depth][j + 1].MoveType) {
+                // если они идут в неправильном порядке, то
+                //  меняем их местами.
+                MOVE tmp = moves[depth][j];
+                moves[depth][j] = moves[depth][j + 1];
+                moves[depth][j + 1] = tmp;
+            }
+        }
+    }
+
 }
 
 // Если ход верный, нет шаха королю. Наверное, можно как-то ставить бит шаха, подумай+
@@ -770,9 +799,6 @@ void make_move(MOVE move, int depth) {
         int king_cell = position[move.current_position];
         int rook_cell = position[move.current_position + 3];
 
-        //position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
-        //position[move.current_position - 4] = rook_cell ; // ладья ходила
-
         position[move.current_position] = 0;
         position[move.current_position + 3] = 0;
         position[move.current_position + 2] = king_cell;
@@ -784,9 +810,6 @@ void make_move(MOVE move, int depth) {
 
         int king_cell = position[move.current_position];
         int rook_cell = position[move.current_position - 4];
-
-        //position[move.current_position] = king_cell | IS_MOVE; // говорим, что король ходил
-        //position[move.current_position - 4] = rook_cell | IS_MOVE; // ладья ходила
 
         position[move.current_position] = 0;
         position[move.current_position - 4] = 0;
