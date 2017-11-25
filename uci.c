@@ -247,10 +247,9 @@ void* start() {
 
         time1 = clock();
 
-        //int score = alpha_beta(-999999, 999999, max_current_deep + 50, current_player); // фикс
         //int score = minimax(max_current_deep, current_player); // фик
 
-        int score = my_alpha(-999999, 999999, max_current_deep, current_player); // фикс
+        int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
 
 
 

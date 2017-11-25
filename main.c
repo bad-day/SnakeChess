@@ -16,10 +16,11 @@ int main() {
     //fen_to_board("r1bqkbnr/1pp2ppp/p1np4/8/2B5/2N5/PPPP2PP/R1BQK1NR b KQkq - 0 1");
     //fen_to_board("r6r/1bppkpbN/pp2p2p/n3PP2/3P4/2PB3P/PP1N2P1/R4RK1 b - - 0 21");
 
-    //fen_to_board("r6r/1bppkpbN/pp2p2p/n3PP2/3P4/2PB3P/PP1N2P1/R4RK1 b - -");
+    fen_to_board("r6r/1bppkpbN/pp2p2p/n3PP2/3P4/2PB3P/PP1N2P1/R4RK1 b - -");
 
-    fen_to_board("r6r/1bppkpbN/pp2p2p/n3PP2/3P4/2PB3P/PP1N2P1/R4RK1 b - - 0 21");
+    //fen_to_board("1k6/7R/8/7R/8/8/8/K7 w - -");
 
+    board_print2(position);
 
     //fen_to_board("8/5b2/3k1b2/8/1p2PP2/P7/8/1K2R3 b - -");
     // 8/7p/3k1b1p/8/4PP2/8/8/1K2R3 b - -

@@ -10,6 +10,39 @@
 
 extern Board position; // main.c
 
+int quiesce(int alpha, int beta, int current_player, int depth) {
+
+    return evaluate(current_player);
+
+    int stand_pat = evaluate(current_player);
+    if( stand_pat >= beta )
+        return beta;
+
+    if( alpha < stand_pat )
+        alpha = stand_pat;
+
+    generate_moves(depth, current_player);
+
+    for (int i = 0; i < 200; i++) {
+
+        if (moves[depth][i].MoveType == 1) {
+
+            make_move(moves[depth][i], depth);
+
+            int score =  -quiesce( -beta, -alpha, !current_player, depth - 1);
+
+            rollback_move(moves[depth][i], depth);
+
+            if( score >= beta )
+                return beta;
+            if( score > alpha )
+                alpha = score;
+        }
+    }
+
+    return alpha;
+}
+
 // оценочная функция
 int evaluate(int player) {
 

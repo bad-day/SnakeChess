@@ -10,8 +10,6 @@
 // анализ листьев
 int evaluate(int player);
 
-int minimax(int depth, int current_player);
-
-int alpha_beta(int alpha, int beta, int depth, int current_player);
+int quiesce(int alpha, int beta, int current_player, int depth);
 
 #endif //CHESS_EVALUATE_H
