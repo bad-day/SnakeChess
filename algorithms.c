@@ -13,9 +13,11 @@
 extern Board position; // main.c
 
 extern MOVE moves[DEPTH][200]; // move.c
-extern int uci_work_status; // uci.c статус работы от GUI
-extern int max_current_deep; // uci.c главная глубина, надо потом переделать все на итеративный режим
-extern MOVE out_move[2]; // uci.c сохраняем данные для uci
+extern int uci_work_status; // uci.c working status from GUI
+extern int max_current_deep; // uci.c the main deep, need change algo to iteration mode
+extern unsigned int count_nodes; // uci.c count of nodes
+extern MOVE out_move[2]; // uci.c save best move for the UCI
+
 
 int minimax(int depth, int current_player) {
 
@@ -41,10 +43,9 @@ int minimax(int depth, int current_player) {
         return evaluate(current_player);
     }
 
-    moves[depth][0].MoveType = -1;
     generate_moves(depth, current_player);
 
-    if (moves[depth][0].MoveType == -1) {
+    if (moves[depth][0].MoveType == MOVE_TYPE_EMPTY) {
 
         if (current_player && king_is_checked(WHITE)) {
 
@@ -61,7 +62,7 @@ int minimax(int depth, int current_player) {
     }
 
     // проходимся по новым ходам
-    for (int i = 0; moves[depth][i].MoveType != -1; i++) {
+    for (int i = 0; moves[depth][i].MoveType != MOVE_TYPE_EMPTY; i++) {
 
         make_move(moves[depth][i], depth); // тут меняется состояние доски
 
@@ -94,7 +95,6 @@ int minimax(int depth, int current_player) {
             }
         }
 
-        moves[depth][i].MoveType = -1;
     }
 
 
@@ -112,15 +112,16 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
     if( depth == 0 ) {
 
-        return quiesce(alpha, beta, current_player, 99 );
+        count_nodes++;
+        return quiesce(alpha, beta, current_player, DEPTH - 1 ); // DEPTH - 1 for quiet search
     }
 
-    generate_moves(depth, current_player); //  все ходы в moves[depth]
+    generate_moves(depth, current_player); //  all moves to moves[depth]
     sort_move(depth);
 
     if(current_player) {
 
-        if (moves[depth][0].MoveType == -1) {
+        if (moves[depth][0].MoveType == MOVE_TYPE_EMPTY) {
 
             if (king_is_checked(WHITE)) {
 
@@ -134,7 +135,7 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
         for (int i = 0; i < 200; i++) {
 
-            if (moves[depth][i].MoveType != -1) {
+            if (moves[depth][i].MoveType != MOVE_TYPE_EMPTY) {
 
                 make_move(moves[depth][i], depth);
                 int score = alpha_beta(alpha, beta, depth - 1, !current_player);
@@ -146,6 +147,8 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
                     if (depth == max_current_deep) {
 
                         out_move[1] = moves[depth][i];
+
+
                     }
                 }
 
@@ -165,7 +168,7 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
     }
     else {
 
-        if (moves[depth][0].MoveType == -1) {
+        if (moves[depth][0].MoveType == MOVE_TYPE_EMPTY) {
 
             if (king_is_checked(BLACK)) {
 
@@ -179,7 +182,7 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
         for (int i = 0; i < 200; i++) {
 
-            if (moves[depth][i].MoveType != -1) {
+            if (moves[depth][i].MoveType != MOVE_TYPE_EMPTY) {
 
                 make_move(moves[depth][i], depth);
                 int score = alpha_beta(alpha, beta, depth - 1, !current_player);
@@ -189,7 +192,8 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
                     score_best = score;
                     if (depth == max_current_deep) {
-
+                        //who_is_cell(position, moves[depth][i].current_position);
+                        //printf(" %d %d", moves[depth][i].current_position, moves[depth][i].next_position);
                         out_move[0] = moves[depth][i];
                     }
                 }

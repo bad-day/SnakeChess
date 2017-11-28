@@ -15,16 +15,18 @@
 
 extern Board position; // main.c
 
-pthread_t thread; // для потоков
+pthread_t thread; // for threads
 
 int uci_work_status = 0;
-int current_player = 1; // текущее состояние игрока
-int max_current_deep; // максимальная глубина
+int current_player = 1; // whose turn, 1 for white 0 for black, it's not racy
+int max_current_deep;
 
-MOVE out_move[2]; // для вывода
+unsigned int count_nodes = 0;
+
+MOVE out_move[2]; // save best move for out
 char blitz_best_move[100];
 
-// загружаем доску в движок
+// load board to engine
 void fen_to_board(char *str) {
 
     for (int i = 0; i < 256; i++) // set border flag
@@ -166,7 +168,7 @@ void fen_to_board(char *str) {
     }
 }
 
-// преобразуем координаты вида e2, h7 в 256
+// change coord of the form a1-h8 to form 0-255
 int uci_to_coord(char a, char b) {
 
     int coord = 180;
@@ -176,7 +178,7 @@ int uci_to_coord(char a, char b) {
     return coord;
 }
 
-// преобразуем координаты вида 256 в e2, e4
+// change coord of the form 0-255 to form a1-h8
 void get_position(int position, char *str) {
 
     position = position - 64;
@@ -188,7 +190,7 @@ void get_position(int position, char *str) {
     str[1] = y + '0';
 }
 
-// преобразуем MOVE в координаты вида e2, h7
+// change MOVE to form a1-h8
 void move_to_uci(MOVE move, char *out) {
 
     // получаем координату в нашеим виде e2
@@ -199,6 +201,8 @@ void move_to_uci(MOVE move, char *out) {
     char second_char[3];
 
     get_position(first, first_char);
+
+    //printf("%s", first_char);
     get_position(second, second_char);
 
     if (move.MoveType == MOVE_TYPE_SIMPLY || move.MoveType == MOVE_TYPE_EAT ||
@@ -236,13 +240,13 @@ void move_to_uci(MOVE move, char *out) {
     }
 }
 
-// поток для бесконечного анализа
+// thread to infinite analyze
 void* start() {
 
     time_t time1, time2;
 
     max_current_deep = 1;
-    uci_work_status = 1; // проверяется в глобальной перемсенной в алгоритме
+    uci_work_status = 1;
     while (max_current_deep < DEPTH) {
 
         time1 = clock();
@@ -251,12 +255,14 @@ void* start() {
 
         int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
 
-
-
-
         time2 = clock();
 
         int time_def = (int)((time2 - time1)/1000); // засекаем время
+
+        if(time_def == 0)
+            time_def = 1;
+
+        int nodes_by_sec = (int) (count_nodes / (time_def * 1000));
 
         char best_move[100];
         if(current_player) {
@@ -273,7 +279,7 @@ void* start() {
         //if(score != -UCI_EXIT && score != UCI_EXIT) {
 
             char buf[100];
-            printf("info depth %d score cp %d time %d pv %s\n", max_current_deep, score, time_def, best_move);
+            printf("info depth %d nodes %d score cp %d time %d pv %s\n", max_current_deep, count_nodes, score, time_def, best_move);
             printf("bestmove %s\n",  best_move);
         //}
 
@@ -282,11 +288,11 @@ void* start() {
     }
 }
 
-// поток для блица
+// test bliz
 void* blitz() {
 
     max_current_deep = 2;
-    uci_work_status = 1; // проверяется в глобальной перемсенной в алгоритме
+    uci_work_status = 1;
 
     while (max_current_deep < DEPTH) {
 
@@ -304,11 +310,10 @@ void* blitz() {
     }
 }
 
-// слушаем что говорит нам gui
+// listen GUI
 void uci_listen() {
 
     char input[100] ;
-    //FILE *fp;
 
     while(fgets(input, 90, stdin)) {
 
@@ -375,8 +380,5 @@ void uci_listen() {
         }
 
         fflush(stdout);
-        //fp = fopen("log", "a");
-        //fwrite(input, strlen(input), 1, fp);
-        //fclose(fp);
     }
 }

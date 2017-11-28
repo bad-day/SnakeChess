@@ -9,10 +9,11 @@
 #include "move.h"
 
 extern Board position; // main.c
+extern MOVE moves[DEPTH][200]; // move.c
 
 int quiesce(int alpha, int beta, int current_player, int depth) {
 
-    return evaluate(current_player);
+    //return evaluate(current_player);
 
     int stand_pat = evaluate(current_player);
     if( stand_pat >= beta )
@@ -22,10 +23,11 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
         alpha = stand_pat;
 
     generate_moves(depth, current_player);
+    sort_move(depth);
 
     for (int i = 0; i < 200; i++) {
 
-        if (moves[depth][i].MoveType == 1) {
+        if (moves[depth][i].MoveType == MOVE_TYPE_EAT) {
 
             make_move(moves[depth][i], depth);
 

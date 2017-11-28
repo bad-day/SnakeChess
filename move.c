@@ -10,7 +10,7 @@
 #include "board.h"
 
 extern Board position; // main.c
-MOVE moves[DEPTH][200]; // все ходы фигурой для дерева
+MOVE moves[DEPTH][200]; // all moves to the tree
 
 // Все возможные ходы фигур
 int KingMove[9] = {16, -16, 1, -1, 17, -17, 15, -15, 0};
@@ -23,23 +23,21 @@ int KnightMove[9] = {32 + 1, 32 - 1, 16 + 2, 16 - 2, -(32 + 1), -(32 - 1), -(16 
 Board old_position[DEPTH];
 
 // счетчих хранимых ходов на текущей глубине moves[DEPTH]
-int current_move[DEPTH];
+int count_move[DEPTH];
 
-// инициализируем
 void move_init() {
 
     for (int i = 0; i < DEPTH; i++) {
         for (int j = 0; j < 200; j++) {
 
-            moves[i][j].MoveType = -1;
+            moves[i][j].MoveType = MOVE_TYPE_EMPTY;
         }
     }
 }
 
-// Получаем все ходы
 void generate_moves(int depth, int current_player) {
 
-    current_move[depth] = 0;
+    count_move[depth] = 0;
 
     for(int i = 0; i < 200; i++) {
         moves[depth][i].MoveType = -1;
@@ -457,24 +455,26 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
 
     // сортануть ходы, сначала взятие
 
-    moves[depth][current_move[depth]].current_position = current_coord;
-    moves[depth][current_move[depth]].next_position = new_coord;
+    moves[depth][count_move[depth]].current_position = current_coord;
+    moves[depth][count_move[depth]].next_position = new_coord;
 
-    moves[depth][current_move[depth]].MoveType = type;
+    moves[depth][count_move[depth]].MoveType = type;
 
     if (type == MOVE_TYPE_CONVERSION) {
 
-        moves[depth][current_move[depth]].NewFigureType = figure_type;
+        moves[depth][count_move[depth]].NewFigureType = figure_type;
     }
 
-    current_move[depth]++;
+    count_move[depth]++;
 }
 
+// MVV-LVA
 void sort_move(int depth) {
 
-    int max = current_move[depth];
+    int max = count_move[depth];
 
-   // qsort();
+    int cell, type;
+    int cell2, type2;
     // туопй
     for(int i = 0 ; i < max - 1; i++) {
         // сравниваем два соседних элемента.
@@ -487,6 +487,66 @@ void sort_move(int depth) {
                 moves[depth][j] = moves[depth][j + 1];
                 moves[depth][j + 1] = tmp;
             }
+        }
+    }
+
+    int start;
+    for(start = 0 ; moves[depth][start].MoveType != MOVE_TYPE_EAT && start < max; start++);
+
+    int stop, test;
+    for(stop = start, test = start; moves[depth][test].MoveType == MOVE_TYPE_EAT; stop++, test++);
+
+    for(int i = start; i < stop - 1; i++) {
+        for(int j = start; j < stop - 1 ; j++) {
+
+            if(moves[depth][j].MoveType == MOVE_TYPE_EAT && moves[depth][j + 1].MoveType == MOVE_TYPE_EAT) {
+
+            cell = position[moves[depth][j].next_position];
+            type = cell & MASK_TYPE;
+
+            cell2 = position[moves[depth][j+1].next_position];
+            type2 = cell2 & MASK_TYPE;
+
+            if(type > type2) {
+
+                    MOVE tmp = moves[depth][j];
+                    moves[depth][j] = moves[depth][j + 1];
+                    moves[depth][j + 1] = tmp;
+                }
+
+            }
+
+        }
+    }
+
+    // в обратном порядке
+    for(int i = start; i < stop - 1; i++) {
+        for(int j = start; j < stop - 1 ; j++) {
+
+
+            cell = position[moves[depth][j].next_position];
+            type = cell & MASK_TYPE;
+
+            cell2 = position[moves[depth][j+1].next_position];
+            type2 = cell2 & MASK_TYPE;
+
+            if(cell == cell2) {
+
+                cell = position[moves[depth][j].current_position];
+                type = cell & MASK_TYPE;
+
+                cell2 = position[moves[depth][j+1].current_position];
+                type2 = cell2 & MASK_TYPE;
+
+                if(type < type2) {
+
+                    MOVE tmp = moves[depth][j];
+                    moves[depth][j] = moves[depth][j + 1];
+                    moves[depth][j + 1] = tmp;
+                }
+
+            }
+
         }
     }
 
@@ -737,7 +797,6 @@ int check_king(int coord) {
     return 0;
 }
 
-// совершаем ход
 void make_move(MOVE move, int depth) {
 
     memcpy(old_position[depth], position, 256 * sizeof(int)); // скопировали позицию до передвижений !!! переделай
@@ -819,24 +878,11 @@ void make_move(MOVE move, int depth) {
     }
 }
 
-// убираем ход
 void rollback_move(MOVE move, int depth) {
 
     memcpy(position, &old_position[depth], 256 * sizeof(int)); // копируем старую позицию !!! переделай
 }
 
-// дебаг, вывод всего дерева
-void print_all_tree(int deep) {
-
-    for (int i = 3; i > deep; i--) {
-
-        board_print2(old_position[i]);
-    }
-
-    board_print2(position);
-}
-
-// получаем число ходов, которых можно сдлеть в этой позиции
 int get_max_count_move(int current_player) {
 
     int count = 0;
@@ -870,7 +916,6 @@ int get_max_count_move(int current_player) {
     return count;
 }
 
-// получаем количество ходов для отдельной фигуры
 int get_count_moves(int coord) {
 
     int count = 0;

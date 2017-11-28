@@ -30,15 +30,14 @@
 
 #define CELL_EMPTY 0
 
-
 typedef int Board[256];
 
 void board_init(Board board);
-void test_board(Board board);
-void test_board2(Board board);
-void board_print(Board board);
-void board_print2(Board board);
-void who_is_cell(Board board, int coord);
 
+void board_print(Board board);
+
+void board_print2(Board board);
+
+void who_is_cell(Board board, int coord);
 
 #endif //CHESS_BOARD_H

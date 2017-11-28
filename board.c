@@ -45,55 +45,6 @@ void board_init(Board board) {
 
 }
 
-// тестовая доска
-void test_board(Board board) {
-
-    for (int i = 0; i < 256; i++) // set border flag
-        board[i] = BORDER;
-
-    // empty cell
-    for (int i = 0; i < 8; i++) {
-        for (int j = 68 + i * 16; j < 76 + i * 16; j++)
-            board[j] = 0;
-    }
-
-
-    // board[168] = FIGURE_TYPE_PAWN | BLACK | IS_MOVE;
-
-    board[103] = FIGURE_TYPE_KING | BLACK;
-    board[100] = FIGURE_TYPE_ROOK | BLACK;
-
-    board[170] = FIGURE_TYPE_KING | WHITE;
-    board[155] = FIGURE_TYPE_ROOK | WHITE;
-    //board[107] = FIGURE_TYPE_ROOK | WHITE;
-    //board[90] = FIGURE_TYPE_PAWN | WHITE | IS_MOVE;
-
-}
-
-// еще одна тестовая доска
-void test_board2(Board board) {
-    for (int i = 0; i < 256; i++) // set border flag
-        board[i] = BORDER;
-
-    // empty cell
-    for (int i = 0; i < 8; i++) {
-        for (int j = 68 + i * 16; j < 76 + i * 16; j++)
-            board[j] = 0;
-    }
-
-    board[72] = FIGURE_TYPE_KING | BLACK;
-    board[71] = FIGURE_TYPE_PAWN | BLACK;
-    board[73] = FIGURE_TYPE_BISHOP | BLACK;
-
-    board[87] = FIGURE_TYPE_PAWN | BLACK;
-    board[88] = FIGURE_TYPE_PAWN | BLACK;
-    //board[91] = FIGURE_TYPE_PAWN|BLACK;
-
-    board[120] = FIGURE_TYPE_KING | WHITE;
-    board[121] = FIGURE_TYPE_QUEEN | WHITE;
-
-}
-
 // вывод доски "как есть"
 void board_print(Board board) {
     for (int i = 0; i < 256; i++) {
@@ -110,89 +61,92 @@ void board_print(Board board) {
 // user-friendly вывод доски
 void board_print2(Board board) {
     int cell, type, color;
-    for (int i = 64; i < 196; i++) {
+    for (int i = 64, k = 1; i < 196; i++, k++) {
 
-        if (i % 16 == 0)
+        if (i % 16 == 0) {
+
             printf("\n");
+        }
+
+        if (i % 8 == 0 && i % 16 == 0) {
+
+            int number = i / 16 - 3;
+            if(number != 9) {
+                printf("\x1b[33m%d\x1b[0m ", 9 - number);
+            }
+            k++;
+        }
 
         cell = board[i];
         type = cell & MASK_TYPE;
         color = cell & MASK_COLOR;
 
-        if (color == WHITE) {
-            if (cell != CELL_EMPTY) {
+        if ( cell != MASK_BORDER) {
 
-                switch (type) {
+            if (color == WHITE) {
 
-                    case FIGURE_TYPE_KING:
-                        printf("K ");
-                        break;
+                if(k % 2 == 0) {
+                    printf("\x1b[1;31;47m");
+                }
+                else {
+                    printf("\x1b[1;31;40m");
+                }
+            }
+            else if(color == BLACK) {
 
-                    case FIGURE_TYPE_QUEEN:
-                        printf("Q ");
-                        break;
-
-                    case FIGURE_TYPE_ROOK:
-                        printf("R ");
-                        break;
-
-                    case FIGURE_TYPE_KNIGHT:
-                        printf("N ");
-                        break;
-
-                    case FIGURE_TYPE_BISHOP:
-                        printf("B ");
-                        break;
-
-                    case FIGURE_TYPE_PAWN:
-                        printf("P ");
-                        break;
+                if(k % 2 == 0) {
+                    printf("\x1b[1;34;47m");
+                }
+                else {
+                    printf("\x1b[1;34;40m");
                 }
             }
 
-            else {
-                printf("%d ", board[i]);
+            switch (type) {
+
+                case FIGURE_TYPE_KING:
+                    printf("K");
+                    break;
+
+                case FIGURE_TYPE_QUEEN:
+                    printf("Q");
+                    break;
+
+                case FIGURE_TYPE_ROOK:
+                    printf("R");
+                    break;
+
+                case FIGURE_TYPE_KNIGHT:
+                    printf("N");
+                    break;
+
+                case FIGURE_TYPE_BISHOP:
+                    printf("B");
+                    break;
+
+                case FIGURE_TYPE_PAWN:
+                    printf("P");
+                    break;
+
+                default:
+                    if(k % 2 == 0) {
+                        printf("\x1b[30;47m ");
+                    }
+                    else {
+                        printf("\x1b[30;40m ");
+                    }
+                    break;
             }
+
+            printf("\x1b[0m ");
         }
-        else {
-            if (cell != CELL_EMPTY) {
-
-                switch (type) {
-
-                    case FIGURE_TYPE_KING:
-                        printf("k ");
-                        break;
-
-                    case FIGURE_TYPE_QUEEN:
-                        printf("q ");
-                        break;
-
-                    case FIGURE_TYPE_ROOK:
-                        printf("r ");
-                        break;
-
-                    case FIGURE_TYPE_KNIGHT:
-                        printf("n ");
-                        break;
-
-                    case FIGURE_TYPE_BISHOP:
-                        printf("b ");
-                        break;
-
-                    case FIGURE_TYPE_PAWN:
-                        printf("p ");
-                        break;
-                }
-            }
-
-            else {
-                printf("%d ", board[i]);
-            }
-        }
-
-
     }
-    printf("\n");
+
+    printf("\x1b[33m  ");
+    for(int j = 0; j < 8; j++)
+        printf("%c ", 'a' + j);
+
+    printf("\x1b[0m\n");
 }
 
 // что за фигура на доске

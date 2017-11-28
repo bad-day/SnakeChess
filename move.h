@@ -14,11 +14,13 @@ enum MOVE_TYPE {
 
     MOVE_TYPE_EMPTY = -1,
     MOVE_TYPE_SIMPLY = 0,
-    MOVE_TYPE_EAT = 1,
-    MOVE_TYPE_CASTLING_O_O = 2,
-    MOVE_TYPE_CASTLING_O_O_0 = 3,
-    MOVE_TYPE_PASSED_PAWN_WHITE = 4,
-    MOVE_TYPE_PASSED_PAWN_BLACK = 5,
+
+    MOVE_TYPE_CASTLING_O_O = 1,
+    MOVE_TYPE_CASTLING_O_O_0 = 2,
+    MOVE_TYPE_PASSED_PAWN_WHITE = 3,
+    MOVE_TYPE_PASSED_PAWN_BLACK = 4,
+
+    MOVE_TYPE_EAT = 5,
     MOVE_TYPE_CONVERSION = 6,
 };
 
@@ -36,7 +38,9 @@ struct MOVE {
     MOVE *Move_Next;
 };
 
+// generete all move to moves[DEPTH]
 void generate_moves(int depth, int current_player);
+
 
 void get_moves(int coord, int depth);
 
@@ -44,9 +48,12 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
 
 void sort_move(int depth);
 
+// make move
 void make_move(MOVE move, int depth);
 
+// roolback move
 void rollback_move(MOVE move, int depth);
+
 
 int check_king(int coord);
 
@@ -54,14 +61,16 @@ int king_is_checked(int color);
 
 int is_legal_move(int coord1, int coord2);
 
-void print_all_tree(int deep);
 
+// init moves, can be deleted
 void move_init();
 
 int king_isset(int color);
 
+// return count of moves for current position
 int get_max_count_move(int current_player);
 
+// return count of moves for each figure
 int get_count_moves(int coord);
 
 #endif //CHESS_MOVE_H
