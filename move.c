@@ -613,7 +613,7 @@ int king_is_checked(int color) {
 
 }
 
-// сама реализцая проверки на шах
+// realisation of check test
 int check_king(int coord) {
 
     int n = 0;
@@ -625,7 +625,6 @@ int check_king(int coord) {
 
     int check_type, cell_color;
 
-    // Король
     if (type == FIGURE_TYPE_KING) {
 
         n = 0;
@@ -647,7 +646,7 @@ int check_king(int coord) {
 
         return 0;
     }
-    // ферзь
+
     if (type == FIGURE_TYPE_QUEEN) {
 
         n = 0;
@@ -675,8 +674,6 @@ int check_king(int coord) {
         return 0;
     }
 
-
-    // ладья
     if (type == FIGURE_TYPE_ROOK) {
 
         n = 0;
@@ -704,7 +701,6 @@ int check_king(int coord) {
         return 0;
     }
 
-    // слон
     if (type == FIGURE_TYPE_BISHOP) {
 
         n = 0;
@@ -731,7 +727,6 @@ int check_king(int coord) {
         return 0;
     }
 
-    //конь
     if (type == FIGURE_TYPE_KNIGHT) {
 
         n = 0;
@@ -752,13 +747,10 @@ int check_king(int coord) {
 
         return 0;
     }
-    //пешка
 
     if (type == FIGURE_TYPE_PAWN) {
 
-        // вроде бы взятие на проходе не нужно
         if (color == BLACK) {
-            //проверим, можно ли есть
 
             cell = position[coord - 1 + 16]; // поле слева от пешки
             check_type = cell & (MASK_TYPE);
@@ -807,20 +799,24 @@ int check_king(int coord) {
 
 void make_move(MOVE move, int depth) {
 
-    memcpy(old_position[depth], position, 256 * sizeof(int)); // скопировали позицию до передвижений !!! переделай
+    memcpy(old_position[depth], position, 256 * sizeof(int)); // save position
     old_hash[depth] = current_hash;
 
     int cell = position[move.current_position];
     int cell_type = cell & MASK_TYPE;
     int cell_color = cell & MASK_COLOR;
 
-
     int new_cell = position[move.next_position];
     int new_cell_type = new_cell & MASK_TYPE;
     int new_cell_color = new_cell & MASK_COLOR;
 
-    position[move.current_position] = cell | IS_MOVE; // говорим. что фигура ходила
+    int zobrist_cell_color = ZOBRIST_WHITE;
+    if(cell_color == BLACK) {
 
+        zobrist_cell_color = ZOBRIST_BLACK;
+    }
+
+    position[move.current_position] = cell | IS_MOVE;
 
     if (cell_type == FIGURE_TYPE_PAWN) {
 
@@ -833,89 +829,98 @@ void make_move(MOVE move, int depth) {
         }
     }
 
-
-    // просто меняем позициб и обнулем
     if (move.MoveType == MOVE_TYPE_SIMPLY || move.MoveType == MOVE_TYPE_EAT) {
-
-        int z_color = ZOBRIST_WHITE;
-        if(cell_color == BLACK)
-            z_color = ZOBRIST_BLACK;
 
         if(move.MoveType == MOVE_TYPE_EAT) {
 
-            current_hash ^=  zobrist_key[new_cell_type][!z_color][move.next_position]; // remove opp fig
+            current_hash ^=  zobrist_key[new_cell_type][!zobrist_cell_color][move.next_position]; // remove opponent piece
         }
 
-        current_hash ^=  zobrist_key[cell_type][z_color][move.current_position];
-        current_hash ^=  zobrist_key[cell_type][z_color][move.next_position];
+        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.current_position];
+        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.next_position];
 
         position[move.current_position] = 0;
         position[move.next_position] = cell;
     }
 
-//    // take black passed pawn
-//    if (move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
-//
-//        current_hash ^=  zobrist_key[cell_type][z_color][move.current_position]; // remove 1 pawn
-//        current_hash ^=  zobrist_key[cell_type][!z_color][move.next_position]; // remove 2 pawn
-//        current_hash ^=  zobrist_key[cell_type][z_color][move.next_position - 16]; // set 1 pawn
-//
-//        position[move.current_position] = 0;
-//        position[move.next_position] = 0;
-//        position[move.next_position - 16] = cell;
-//    }
-//
-//    // take white passed pawn
-//    if (move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE) {
-//
-//        current_hash ^=  zobrist_key[cell_type][z_color][move.current_position]; // remove 1 pawn
-//        current_hash ^=  zobrist_key[cell_type][!z_color][move.next_position]; // remove 2 pawn
-//        current_hash ^=  zobrist_key[cell_type][z_color][move.next_position + 16]; // set 1 pawn
-//
-//        position[move.current_position] = 0;
-//        position[move.next_position] = 0;
-//        position[move.next_position + 16] = cell;
-//    }
-//
-//    // если пека превртилась, нужна вакцина. Но Эйли жива
-//    if (move.MoveType == MOVE_TYPE_CONVERSION) {
-//
-//        current_hash = current_hash ^ zobrist_key[cell_type][z_color][move.current_position] ^ zobrist_key[move.NewFigureType][z_color][move.next_position];
-//
-//        position[move.current_position] = 0;
-//        position[move.next_position] = move.NewFigureType | color | IS_MOVE;
-//    }
+    // take black passed pawn
+    if (move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
 
-//    if (move.MoveType == MOVE_TYPE_CASTLING_O_O) {
-//
-//
-//        int king_cell = position[move.current_position];
-//        int rook_cell = position[move.current_position + 3];
-//
-//        position[move.current_position] = 0;
-//        position[move.current_position + 3] = 0;
-//        position[move.current_position + 2] = king_cell;
-//        position[move.current_position + 1] = rook_cell | IS_MOVE;
-//
-//    }
-//
-//    if (move.MoveType == MOVE_TYPE_CASTLING_O_O_0) {
-//
-//        int king_cell = position[move.current_position];
-//        int rook_cell = position[move.current_position - 4];
-//
-//        position[move.current_position] = 0;
-//        position[move.current_position - 4] = 0;
-//        position[move.current_position - 2] = king_cell;
-//        position[move.current_position - 1] = rook_cell | IS_MOVE;
-//
-//    }
+        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.current_position]; // remove 1 pawn
+        current_hash ^=  zobrist_key[cell_type][!zobrist_cell_color][move.next_position]; // remove 2 pawn
+        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.next_position - 16]; // set 1 pawn
+
+        position[move.current_position] = 0;
+        position[move.next_position] = 0;
+        position[move.next_position - 16] = cell;
+    }
+
+    // take white passed pawn
+    if (move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE) {
+
+        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.current_position]; // remove 1 pawn
+        current_hash ^=  zobrist_key[cell_type][!zobrist_cell_color][move.next_position]; // remove 2 pawn
+        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.next_position + 16]; // set 1 pawn
+
+        position[move.current_position] = 0;
+        position[move.next_position] = 0;
+        position[move.next_position + 16] = cell;
+    }
+
+    // if pawn conversion, Ailey is alive?
+    if (move.MoveType == MOVE_TYPE_CONVERSION) {
+
+        if(new_cell_type != CELL_EMPTY) {
+
+            current_hash ^=  zobrist_key[new_cell_type][!zobrist_cell_color][move.next_position];
+        }
+
+        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.current_position];
+        current_hash ^=  zobrist_key[move.NewFigureType][zobrist_cell_color][move.next_position];
+
+        position[move.current_position] = 0;
+        position[move.next_position] = move.NewFigureType | cell_color | IS_MOVE;
+    }
+
+    if (move.MoveType == MOVE_TYPE_CASTLING_O_O) {
+
+        int king_cell = position[move.current_position];
+        int rook_cell = position[move.current_position + 3];
+
+        current_hash ^=  zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position]; // remove king
+        current_hash ^=  zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position + 3]; // remove rook
+
+        current_hash ^=  zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position + 2]; // set king
+        current_hash ^=  zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position + 1]; // set rook
+
+        position[move.current_position] = 0;
+        position[move.current_position + 3] = 0;
+        position[move.current_position + 2] = king_cell;
+        position[move.current_position + 1] = rook_cell | IS_MOVE;
+    }
+
+    if (move.MoveType == MOVE_TYPE_CASTLING_O_O_0) {
+
+        int king_cell = position[move.current_position];
+        int rook_cell = position[move.current_position - 4];
+
+        current_hash ^=  zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position]; // remove king
+        current_hash ^=  zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position - 4]; // remove rook
+
+        current_hash ^=  zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position - 2]; // set king
+        current_hash ^=  zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position - 1]; // set rook
+
+        position[move.current_position] = 0;
+        position[move.current_position - 4] = 0;
+        position[move.current_position - 2] = king_cell;
+        position[move.current_position - 1] = rook_cell | IS_MOVE;
+    }
 }
 
 void rollback_move(MOVE move, int depth) {
 
-    current_hash = old_hash[depth];
-    memcpy(position, &old_position[depth], 256 * sizeof(int)); // копируем старую позицию !!! переделай
+    current_hash = old_hash[depth]; // load zobrist hash
+    memcpy(position, &old_position[depth], 256 * sizeof(int)); // load position
 }
 
 int get_max_count_move(int current_player) {
@@ -932,7 +937,7 @@ int get_max_count_move(int current_player) {
         color = BLACK;
     }
 
-    // сканируем доску на поисках фигуры
+    // scan board
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
             if (position[j] != 0) {
