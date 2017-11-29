@@ -13,7 +13,7 @@ extern MOVE moves[DEPTH][200]; // move.c
 
 int quiesce(int alpha, int beta, int current_player, int depth) {
 
-    //return evaluate(current_player);
+    return evaluate(current_player);
 
     int stand_pat = evaluate(current_player);
     if( stand_pat >= beta )

@@ -1,7 +1,7 @@
 CXX			= gcc
 FLAGS		= -pthread
 
-SOURCES		= main.c board.c move.c evaluate.c uci.c algorithms.c
+SOURCES		= main.c board.c move.c evaluate.c uci.c algorithms.c hash.c
 OBJECTS		= $(SOURCES:.c=.o)
 
 chess: $(OBJECTS)

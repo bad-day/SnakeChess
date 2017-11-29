@@ -7,6 +7,7 @@
 #include "board.h"
 #include "move.h"
 #include "uci.h"
+#include "hash.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -18,6 +19,11 @@ extern int max_current_deep; // uci.c the main deep, need change algo to iterati
 extern unsigned int count_nodes; // uci.c count of nodes
 extern MOVE out_move[2]; // uci.c save best move for the UCI
 
+extern HASH_TABLE hash_table_white[MAX_HASH_TABLE_SIZE]; // hash.c
+extern HASH_TABLE hash_table_black[MAX_HASH_TABLE_SIZE]; // hash.c
+
+extern unsigned long current_hash; // hash.c
+extern unsigned long zobrist_key_move; // hash.c
 
 int minimax(int depth, int current_player) {
 
@@ -38,40 +44,62 @@ int minimax(int depth, int current_player) {
         score_best = CHECKMATE - depth;
     }
 
-    if (depth == 0) { // дошли до листка
+    HASH_TABLE *hash_ptr;
 
-        return evaluate(current_player);
+    if(current_player)
+        hash_ptr =  &hash_table_white[current_hash & (MAX_HASH_TABLE_SIZE - 1)];
+    else
+        hash_ptr =  &hash_table_black[current_hash & (MAX_HASH_TABLE_SIZE - 1)];
+
+    if(hash_ptr->type == HASH_TABLE_TYPE_EXACT && hash_ptr->deep >= depth) {
+
+        return hash_ptr->score;
+    }
+
+
+    if (depth == 0) { // terminated node
+
+        // count of node
+        count_nodes++;
+
+        int last_score =  evaluate(current_player);
+        hash_to_table(current_hash, last_score, depth, current_player); // write hash to table
+
+        return last_score;
     }
 
     generate_moves(depth, current_player);
+    sort_move(depth);
 
     if (moves[depth][0].MoveType == MOVE_TYPE_EMPTY) {
 
         if (current_player && king_is_checked(WHITE)) {
 
+            hash_to_table(current_hash, -CHECKMATE, depth, current_player);
             return -CHECKMATE;
         }
 
         if (!current_player && king_is_checked(BLACK)) {
 
+            hash_to_table(current_hash, CHECKMATE, depth, current_player);
             return CHECKMATE;
         }
 
-        // пат
+        hash_to_table(current_hash, 0, depth, current_player);
         return 0;
     }
 
-    // проходимся по новым ходам
+    // going from the moves
     for (int i = 0; moves[depth][i].MoveType != MOVE_TYPE_EMPTY; i++) {
 
-        make_move(moves[depth][i], depth); // тут меняется состояние доски
+        make_move(moves[depth][i], depth); // make a move, change board
 
         score = minimax(depth - 1, !current_player);
 
-        rollback_move(moves[depth][i], depth); // возвращаем прежнюю доску
+        rollback_move(moves[depth][i], depth); // rollback and board
 
 
-        if (current_player) { // если белые, максимимзируем
+        if (current_player) { // maxi
 
             if (score > score_best) {
 
@@ -80,10 +108,10 @@ int minimax(int depth, int current_player) {
                     out_move[1] = moves[depth][i];
                 }
 
-                score_best = score; // максимальное в данном поддереве
+                score_best = score; // max from under three
             }
         }
-        else { // минимизируем
+        else { // mini
 
             if (score < score_best) {
 
@@ -91,12 +119,12 @@ int minimax(int depth, int current_player) {
 
                     out_move[0] = moves[depth][i];
                 }
+
                 score_best = score;
             }
         }
 
     }
-
 
     return score_best;
 }
@@ -110,11 +138,34 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
     int score_best;
 
+
+    HASH_TABLE *hash_ptr;
+
+//
+//    if(current_player)
+//        hash_ptr =  &hash_table_white[current_hash & (MAX_HASH_TABLE_SIZE - 1)];
+//    else
+//        hash_ptr =  &hash_table_black[current_hash & (MAX_HASH_TABLE_SIZE - 1)];
+//
+//    if(hash_ptr->HashType == HASH_TABLE_TYPE_EXACT && hash_ptr->HashType != 0) {
+//
+//        return hash_ptr->Score;
+//    }
+
+
     if( depth == 0 ) {
 
+        // count of processed nodes
         count_nodes++;
-        return quiesce(alpha, beta, current_player, DEPTH - 1 ); // DEPTH - 1 for quiet search
+
+        int score_out =  quiesce(alpha, beta, current_player, DEPTH - 1 ); // DEPTH - 1 for quiet search
+
+
+        //hash_to_table(current_hash, score_out, current_player);
+
+        return score_out;
     }
+
 
     generate_moves(depth, current_player); //  all moves to moves[depth]
     sort_move(depth);
@@ -125,9 +176,11 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
             if (king_is_checked(WHITE)) {
 
-                return -CHECKMATE;
+                //hash_to_table(current_hash, -CHECKMATE - depth, current_player);
+                return -CHECKMATE - depth;
             }
 
+            //hash_to_table(current_hash, 0, current_player);
             return 0;
         }
 
@@ -138,7 +191,9 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
             if (moves[depth][i].MoveType != MOVE_TYPE_EMPTY) {
 
                 make_move(moves[depth][i], depth);
+
                 int score = alpha_beta(alpha, beta, depth - 1, !current_player);
+
                 rollback_move(moves[depth][i], depth);
 
                 if(score > score_best) {
@@ -147,7 +202,6 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
                     if (depth == max_current_deep) {
 
                         out_move[1] = moves[depth][i];
-
 
                     }
                 }
@@ -159,7 +213,7 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
                 if (beta <= alpha) {
 
-                    break;
+                    return  beta;
                 }
             }
         }
@@ -172,9 +226,11 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
             if (king_is_checked(BLACK)) {
 
-                return CHECKMATE;
+                //hash_to_table(current_hash, CHECKMATE + depth, current_player);
+                return CHECKMATE + depth;
             }
 
+            //hash_to_table(current_hash, 0, current_player);
             return 0;
         }
 
@@ -187,13 +243,11 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
                 make_move(moves[depth][i], depth);
                 int score = alpha_beta(alpha, beta, depth - 1, !current_player);
                 rollback_move(moves[depth][i], depth);
-
                 if(score < score_best) {
 
                     score_best = score;
                     if (depth == max_current_deep) {
-                        //who_is_cell(position, moves[depth][i].current_position);
-                        //printf(" %d %d", moves[depth][i].current_position, moves[depth][i].next_position);
+
                         out_move[0] = moves[depth][i];
                     }
                 }
@@ -205,7 +259,7 @@ int alpha_beta(int alpha, int beta, int depth , int current_player) {
 
                 if (beta <= alpha) {
 
-                    break;
+                    return beta;
                 }
             }
         }

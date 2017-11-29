@@ -12,6 +12,7 @@
 #include "board.h"
 #include "algorithms.h"
 #include "uci.h"
+#include "hash.h"
 
 extern Board position; // main.c
 
@@ -249,11 +250,12 @@ void* start() {
     uci_work_status = 1;
     while (max_current_deep < DEPTH) {
 
+        hash_init();
         time1 = clock();
 
-        //int score = minimax(max_current_deep, current_player); // фик
+        int score = minimax(max_current_deep, current_player); // фик
 
-        int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
+        //int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
 
         time2 = clock();
 
