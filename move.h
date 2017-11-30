@@ -5,11 +5,13 @@
 #ifndef CHESS_MOVE_H
 #define CHESS_MOVE_H
 
+// max deep
 #define DEPTH 100
 
 typedef enum MOVE_TYPE MOVE_TYPE;
 typedef struct MOVE MOVE;
-//Типы ходов
+
+// move types
 enum MOVE_TYPE {
 
     MOVE_TYPE_EMPTY = -1,
@@ -28,43 +30,42 @@ struct MOVE {
 
     int current_position;
     int next_position;
-    MOVE_TYPE MoveType; //тип хода
-    int NewFigureType; //новый тип фигуры, если она получилась из пешки
-    int Coord256_PassedPawn; //ход проходной пешкой (если он есть. 0- проходной пешки нет)
-    int IsEat; //ход-взятие
-     //изменение веса хода (используем для сортировки ходов)
-    int Score;
-    //указатель на следующий элемент
-    MOVE *Move_Next;
+
+    MOVE_TYPE MoveType; // move type
+    int NewFigureType; // A new type of figure, if it came out of a pawn
 };
 
-// generete all move to moves[DEPTH]
-void generate_moves(int depth, int current_player);
-
-
-void get_moves(int coord, int depth);
-
-void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE_TYPE type);
-
-void sort_move(int depth);
-
-// make move
-void make_move(MOVE move, int depth);
-
-// roolback move
-void rollback_move(MOVE move, int depth);
-
-
-int check_king(int coord);
-
-int king_is_checked(int color);
-
-int is_legal_move(int coord1, int coord2);
-
-
-// init moves, can be deleted
+// init move
 void move_init();
 
+// generate all move to moves[DEPTH]
+void generate_moves(int depth, int current_player);
+
+// get moves for each piece
+void get_moves(int coord, int depth);
+
+// add move to array
+void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE_TYPE type);
+
+// MVV-LVA move sorting
+void sort_move(int depth);
+
+// make move, change positions and zobrist
+void make_move(MOVE move, int depth);
+
+// take back move and zobrist keys
+void rollback_move(MOVE move, int depth);
+
+// realisation of check test
+int check_king(int coord);
+
+// if king isset, not using now
+int king_is_checked(int color);
+
+// the move is made according to the rules, there are no checks and ligaments
+int is_legal_move(int coord1, int coord2);
+
+// king is checked?
 int king_isset(int color);
 
 // return count of moves for current position

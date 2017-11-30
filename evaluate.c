@@ -50,7 +50,8 @@ int evaluate(int player) {
 
     int cell, type, color;
     int black = 0, white = 0;
-    // сканируем доску на поисках фигуры
+
+    // scan the board in search of a pieces
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
             if (position[j] != 0) {

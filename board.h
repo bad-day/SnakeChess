@@ -5,7 +5,7 @@
 #ifndef CHESS_BOARD_H
 #define CHESS_BOARD_H
 
-// type of figures
+// type of pieces
 #define FIGURE_TYPE_KING   1
 #define FIGURE_TYPE_QUEEN  2
 #define FIGURE_TYPE_ROOK   3
@@ -32,12 +32,16 @@
 
 typedef int Board[256];
 
+// board init
 void board_init(Board board);
 
+// board print 16x16
 void board_print(Board board);
 
+// user-friendly board print
 void board_print2(Board board);
 
+// what a piece on the board
 void who_is_cell(Board board, int coord);
 
 #endif //CHESS_BOARD_H

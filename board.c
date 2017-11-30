@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "board.h"
 
-// инициализация доски
+// board init
 void board_init(Board board) {
 
     for (int i = 0; i < 256; i++) // set border flag
@@ -45,7 +45,7 @@ void board_init(Board board) {
 
 }
 
-// вывод доски "как есть"
+// board print 16x16
 void board_print(Board board) {
     for (int i = 0; i < 256; i++) {
 
@@ -58,8 +58,9 @@ void board_print(Board board) {
     printf("\n");
 }
 
-// user-friendly вывод доски
+// user-friendly board print
 void board_print2(Board board) {
+
     int cell, type, color;
     for (int i = 64, k = 1; i < 196; i++, k++) {
 
@@ -71,7 +72,7 @@ void board_print2(Board board) {
         if (i % 8 == 0 && i % 16 == 0) {
 
             int number = i / 16 - 3;
-            if(number != 9) {
+            if (number != 9) {
                 printf("\x1b[33m%d\x1b[0m ", 9 - number);
             }
             k++;
@@ -81,20 +82,20 @@ void board_print2(Board board) {
         type = cell & MASK_TYPE;
         color = cell & MASK_COLOR;
 
-        if ( cell != MASK_BORDER) {
+        if (cell != MASK_BORDER) {
 
             if (color == WHITE) {
 
-                if(k % 2 == 0) {
+                if (k % 2 == 0) {
                     printf("\x1b[1;31;47m");
                 }
                 else {
                     printf("\x1b[1;31;40m");
                 }
             }
-            else if(color == BLACK) {
+            else if (color == BLACK) {
 
-                if(k % 2 == 0) {
+                if (k % 2 == 0) {
                     printf("\x1b[1;34;47m");
                 }
                 else {
@@ -129,7 +130,7 @@ void board_print2(Board board) {
                     break;
 
                 default:
-                    if(k % 2 == 0) {
+                    if (k % 2 == 0) {
                         printf("\x1b[30;47m ");
                     }
                     else {
@@ -143,32 +144,37 @@ void board_print2(Board board) {
     }
 
     printf("\x1b[33m  ");
-    for(int j = 0; j < 8; j++)
+    for (int j = 0; j < 8; j++)
         printf("%c ", 'a' + j);
 
     printf("\x1b[0m\n");
+    fflush(stdout);
 }
 
-// что за фигура на доске
+// what a piece on the board
 void who_is_cell(Board board, int coord) {
 
     int cell = board[coord];
 
     if (cell == CELL_EMPTY) {
+
         printf("Cell is empty");
         return;
     }
 
     int is_border = cell & MASK_BORDER;
     if (is_border == BORDER) {
+
         printf("Cell is border");
     }
 
     int color = cell & MASK_COLOR;
     if (color == WHITE) {
+
         printf("White ");
     }
     else {
+
         printf("Black ");
     }
 
@@ -200,6 +206,5 @@ void who_is_cell(Board board, int coord) {
             printf("pawn");
             break;
     }
-
 
 }

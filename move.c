@@ -80,29 +80,6 @@ void generate_moves(int depth, int current_player) {
 
 }
 
-// if king isset, not using now
-int king_isset(int color) {
-
-    int cell, type, cell_color;
-
-    for (int i = 0; i < 8; i++) {
-        for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
-            if (position[j] != 0) {
-
-                cell = position[j];
-                cell_color = cell & MASK_COLOR;
-                type = cell & MASK_TYPE;
-
-                if (cell_color == color && type == FIGURE_TYPE_KING) {
-                    return 1;
-                }
-            }
-        }
-    }
-
-    return 0;
-}
-
 // get moves for each piece
 void get_moves(int coord, int depth) {
 
@@ -436,6 +413,29 @@ void get_moves(int coord, int depth) {
         }
     }
 
+}
+
+// if king isset, not using now
+int king_isset(int color) {
+
+    int cell, type, cell_color;
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
+            if (position[j] != 0) {
+
+                cell = position[j];
+                cell_color = cell & MASK_COLOR;
+                type = cell & MASK_TYPE;
+
+                if (cell_color == color && type == FIGURE_TYPE_KING) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
 }
 
 // add move to array
@@ -905,6 +905,7 @@ void make_move(MOVE move, int depth) {
     }
 }
 
+// roll back move
 void rollback_move(MOVE move, int depth) {
 
     current_hash = old_hash[depth]; // load zobrist hash

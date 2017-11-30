@@ -10,7 +10,7 @@ HASH_TABLE hash_table_white[MAX_HASH_TABLE_SIZE];
 HASH_TABLE hash_table_black[MAX_HASH_TABLE_SIZE];
 unsigned long current_hash;
 
-//Хэш-ключи [тип фигуры][цвет фигуры][позиция фигуры на доске 16x16]
+//hash-table [type piece][color piece][position on 16x16]
 unsigned long zobrist_key[FIGURE_TYPE_PAWN + 1][2][256] =
         {
                 {
@@ -505,14 +505,14 @@ unsigned long zobrist_key[FIGURE_TYPE_PAWN + 1][2][256] =
                 }
         };
 
-unsigned long zobrist_key_move = 0x54ca3eb5b5f3cb5b;//ключ смены хода
-unsigned long zobrist_key_null_move = 0x08d9bc25bebf91b1;//ключ нулевого хода
+//unsigned long zobrist_key_move = 0x54ca3eb5b5f3cb5b; // key for change move
+//unsigned long zobrist_key_null_move = 0x08d9bc25bebf91b1; // key for null move
 
 void hash_init() {
 
     current_hash = get_hash();
 
-    for(int i = 0; i < MAX_HASH_TABLE_SIZE; i++) {
+    for (int i = 0; i < MAX_HASH_TABLE_SIZE; i++) {
 
         hash_table_white[i].type = HASH_TABLE_TYPE_EMPTY;
         hash_table_black[i].type = HASH_TABLE_TYPE_EMPTY;
@@ -520,20 +520,11 @@ void hash_init() {
     }
 }
 
-//void hash_reset() {
-//
-//    for(int i = 0; i < MAX_HASH_TABLE_SIZE; i++) {
-//
-//        hash_table->HashType = HASH_TABLE_TYPE_EMPTY;
-//    }
-//}
 
 unsigned long get_hash() {
 
     unsigned long key = 0;
-
     int cell, type, color;
-
 
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
@@ -552,15 +543,15 @@ unsigned long get_hash() {
         }
     }
 
-
     return key;
 }
 
 void hash_to_table(unsigned long hash_key, int score, int depth, int color) {
 
-    if(color) {
+    if (color) {
 
-        HASH_TABLE *ptr = &hash_table_white[hash_key % (MAX_HASH_TABLE_SIZE)];//номер в таблице по остатку от деления
+        // number in the table by the remainder of the division
+        HASH_TABLE *ptr = &hash_table_white[hash_key % (MAX_HASH_TABLE_SIZE)];
 
         ptr->type = HASH_TABLE_TYPE_EXACT;
         ptr->deep = depth;
@@ -569,7 +560,7 @@ void hash_to_table(unsigned long hash_key, int score, int depth, int color) {
     }
     else {
 
-        HASH_TABLE *ptr = &hash_table_black[hash_key % (MAX_HASH_TABLE_SIZE)];//номер в таблице по остатку от деления
+        HASH_TABLE *ptr = &hash_table_black[hash_key % (MAX_HASH_TABLE_SIZE)];
 
         ptr->type = HASH_TABLE_TYPE_EXACT;
         ptr->deep = depth;
