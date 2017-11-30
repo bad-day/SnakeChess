@@ -560,7 +560,7 @@ void hash_to_table(unsigned long hash_key, int score, int depth, int color) {
 
     if(color) {
 
-        HASH_TABLE *ptr = &hash_table_white[hash_key & (MAX_HASH_TABLE_SIZE - 1)];//номер в таблице по остатку от деления
+        HASH_TABLE *ptr = &hash_table_white[hash_key % (MAX_HASH_TABLE_SIZE)];//номер в таблице по остатку от деления
 
         ptr->type = HASH_TABLE_TYPE_EXACT;
         ptr->deep = depth;
@@ -569,7 +569,7 @@ void hash_to_table(unsigned long hash_key, int score, int depth, int color) {
     }
     else {
 
-        HASH_TABLE *ptr = &hash_table_black[hash_key & (MAX_HASH_TABLE_SIZE - 1)];//номер в таблице по остатку от деления
+        HASH_TABLE *ptr = &hash_table_black[hash_key % (MAX_HASH_TABLE_SIZE)];//номер в таблице по остатку от деления
 
         ptr->type = HASH_TABLE_TYPE_EXACT;
         ptr->deep = depth;

@@ -33,9 +33,9 @@ typedef struct HASH_TABLE HASH_TABLE;
 struct HASH_TABLE
 {
     unsigned long key;//хэш-ключ
-    long deep;//глубина узла
-    long type;//тип узла
-    long score;//оценка узла
+    int deep;//глубина узла
+    int type;//тип узла
+    int score;//оценка узла
     MOVE move;//лучший ход (если он есть)
 };
 
