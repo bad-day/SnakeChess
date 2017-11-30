@@ -18,21 +18,20 @@ extern unsigned long current_hash; // hash.c
 extern unsigned long current_hash; // hash.c
 extern unsigned long zobrist_key[FIGURE_TYPE_PAWN + 1][2][256]; // hash.c
 
-// Все возможные ходы фигур
+// all moves
 int KingMove[9] = {16, -16, 1, -1, 17, -17, 15, -15, 0};
 int QueenMove[9] = {16, -16, 1, -1, 17, -17, 15, -15, 0};
 int RookMove[5] = {16, -16, 1, -1, 0};
 int BishopMove[5] = {17, -17, 15, -15, 0};
 int KnightMove[9] = {32 + 1, 32 - 1, 16 + 2, 16 - 2, -(32 + 1), -(32 - 1), -(16 + 2), -(16 - 2), 0};
 
-// храним позиции для каждой глубины, по сути нужны только для rollback
-Board old_position[DEPTH];
+Board old_position[DEPTH]; // positions for rollback
+unsigned long old_hash[DEPTH]; // hash for rollback
 
-unsigned long old_hash[DEPTH]; // fix
-
-// счетчих хранимых ходов на текущей глубине moves[DEPTH]
+// count moves for current deep
 int count_move[DEPTH];
 
+// not necessary
 void move_init() {
 
     for (int i = 0; i < DEPTH; i++) {
@@ -43,17 +42,18 @@ void move_init() {
     }
 }
 
+// generate moves
 void generate_moves(int depth, int current_player) {
 
     count_move[depth] = 0;
 
-    for(int i = 0; i < 200; i++) {
+    for (int i = 0; i < 200; i++) {
         moves[depth][i].MoveType = -1;
     }
 
     int cell, color, cell_color;
 
-    // какой цвет фигуры ещем
+    // color of piece
     if (current_player) {
 
         color = WHITE;
@@ -63,7 +63,7 @@ void generate_moves(int depth, int current_player) {
         color = BLACK;
     }
 
-    // сканируем доску на поисках фигуры
+    // scan board
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
             if (position[j] != 0) {
@@ -80,7 +80,7 @@ void generate_moves(int depth, int current_player) {
 
 }
 
-// Есть ли король, пока не надо
+// if king isset, not using now
 int king_isset(int color) {
 
     int cell, type, cell_color;
@@ -103,7 +103,7 @@ int king_isset(int color) {
     return 0;
 }
 
-// Получаем ходы для каждой фигуры
+// get moves for each piece
 void get_moves(int coord, int depth) {
 
     int n = 0;
@@ -114,13 +114,14 @@ void get_moves(int coord, int depth) {
     int type = cell & MASK_TYPE;
 
     int cell_color, is_moved, is_passed;
-    // король
+
+    // figure type is king
     if (type == FIGURE_TYPE_KING) {
 
         n = 0;
         while (KingMove[n] != 0) {
 
-            int new_coord = coord + KingMove[n]; // Смотрим клетку
+            int new_coord = coord + KingMove[n]; // Watch the cell
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
 
@@ -128,7 +129,7 @@ void get_moves(int coord, int depth) {
 
                 add_move(depth, coord, new_coord, FIGURE_TYPE_KING, MOVE_TYPE_SIMPLY);
             }
-            else if (cell_color == opponent_color) {  // кушаем
+            else if (cell_color == opponent_color) { // eat
 
                 add_move(depth, coord, new_coord, FIGURE_TYPE_KING, MOVE_TYPE_EAT);
             }
@@ -136,20 +137,20 @@ void get_moves(int coord, int depth) {
             n++;
         }
 
-        // рокировки
+        // castlings
         cell = position[coord];
         is_moved = cell & MASK_MOVE;
-        if (is_moved != IS_MOVE) { // если король не ходил
+        if (is_moved != IS_MOVE) { // if king did't move
 
-            // короткая рокировка
+            // short castling
             if (position[coord + 1] == CELL_EMPTY && position[coord + 2] == CELL_EMPTY) {
                 int is_rook = position[coord + 3];
                 int type_is_rook = is_rook & MASK_TYPE;
                 int rook_moved = is_rook & MASK_MOVE;
 
-                // Если ладья не ходила
+                // if rook did't move
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
-                    // Если поля для короля не бьют
+                    // If the fields for the king do not under attack
                     if (is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
 
                         add_move(depth, coord, coord + 2, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O);
@@ -157,17 +158,16 @@ void get_moves(int coord, int depth) {
                 }
             }
 
-            // длинная рокировка
+            // long castling
             if (position[coord - 1] == CELL_EMPTY && position[coord - 2] == CELL_EMPTY &&
-                position[coord - 3] == CELL_EMPTY) { // если клетки пустые
+                position[coord - 3] == CELL_EMPTY) {
 
                 int is_rook = position[coord - 4];
                 int type_is_rook = is_rook & MASK_TYPE;
                 int rook_moved = is_rook & MASK_MOVE;
 
-                // Если ладья не ходила
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
-                    // Если поля для короля не бьют
+
                     if (is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
 
                         add_move(depth, coord, coord - 3, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O_0);
@@ -216,7 +216,6 @@ void get_moves(int coord, int depth) {
             cell_color = cell & MASK_COLOR;
             if (cell_color == opponent_color) {
 
-                //position[coord] = cell | IS_MOVE; // ладья ходила
                 add_move(depth, coord, new_coord, FIGURE_TYPE_ROOK, MOVE_TYPE_EAT);
             }
             n++;
@@ -279,12 +278,12 @@ void get_moves(int coord, int depth) {
 
         is_moved = cell & MASK_MOVE;
 
-        if (color == WHITE) { //если это белая пешка
+        if (color == WHITE) { // if pawn is white
 
-            //ход пешкой на одну клетку вперёд
+            // move pawn on 1 cell ahead
             if (position[coord - 16] == CELL_EMPTY) {
 
-                if (coord > 80 && coord < 96) { // если текущий ряд 7
+                if (coord > 80 && coord < 96) { // if the current line 7
 
                     add_move(depth, coord, coord - 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
@@ -294,22 +293,22 @@ void get_moves(int coord, int depth) {
                 else {
 
                     add_move(depth, coord, coord - 16, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
-                    if (is_moved != IS_MOVE) { // если пешка не ходила
+                    if (is_moved != IS_MOVE) { // if pawn did't move
 
                         if (position[coord - 32] == CELL_EMPTY) {
 
-                            add_move(depth, coord, coord - 32, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY); // тут сделай скачок
+                            add_move(depth, coord, coord - 32, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
                         }
                     }
                 }
             }
 
-            //проверим, можно ли есть
+            // the left of the pawn
             cell = position[coord - 1 - 16];
             cell_color = cell & MASK_COLOR;
 
             if (cell_color == BLACK) {
-                if (coord > 80 && coord < 96) { // если текущий ряд 7
+                if (coord > 80 && coord < 96) { // if the current line 7
 
                     add_move(depth, coord, coord - 1 - 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 1 - 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
@@ -322,10 +321,11 @@ void get_moves(int coord, int depth) {
                 }
             }
 
+            // the right of the pawn
             cell = position[coord + 1 - 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == BLACK) {
-                if (coord > 80 && coord < 96) { // если текущий ряд 7
+                if (coord > 80 && coord < 96) { // if the current line 7
 
                     add_move(depth, coord, coord + 1 - 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 1 - 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
@@ -338,10 +338,9 @@ void get_moves(int coord, int depth) {
                 }
             }
 
-            // взятие проходной пешки
+            // take a pawwed pawn
             if (coord > 112 && coord < 128) {
 
-                // проходная пешка справа
                 cell = position[coord + 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
@@ -350,7 +349,6 @@ void get_moves(int coord, int depth) {
                     add_move(depth, coord, coord + 1, FIGURE_TYPE_PAWN, MOVE_TYPE_PASSED_PAWN_BLACK);
                 }
 
-                // проходная пешка слева
                 cell = position[coord - 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
@@ -361,11 +359,11 @@ void get_moves(int coord, int depth) {
             }
 
         }
-        else { //если это чёрная пешка
+        else {
 
             if (position[coord + 16] == CELL_EMPTY) {
 
-                if (coord > 160 && coord < 176) // если текущий ряд 2
+                if (coord > 160 && coord < 176) // if the current line 2
                 {
                     add_move(depth, coord, coord + 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
@@ -376,7 +374,7 @@ void get_moves(int coord, int depth) {
 
                     add_move(depth, coord, coord + 16, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
 
-                    if (is_moved != IS_MOVE) { // если пешка не ходила
+                    if (is_moved != IS_MOVE) {
                         if (position[coord + 32] == CELL_EMPTY) {
                             add_move(depth, coord, coord + 32, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
                         }
@@ -384,12 +382,11 @@ void get_moves(int coord, int depth) {
                 }
             }
 
-            //едим слева от пешки
             cell = position[coord - 1 + 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
 
-                if (coord > 160 && coord < 176) { // если текущий ряд 2
+                if (coord > 160 && coord < 176) { // if the current line 2
 
                     add_move(depth, coord, coord - 1 + 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 1 + 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
@@ -400,12 +397,12 @@ void get_moves(int coord, int depth) {
                     add_move(depth, coord, coord - 1 + 16, FIGURE_TYPE_PAWN, MOVE_TYPE_EAT);
                 }
             }
-            //едим справа от пешки
+
             cell = position[coord + 1 + 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
 
-                if (coord > 160 && coord < 176) // если текущий ряд 2
+                if (coord > 160 && coord < 176) // if the current line 2
                 {
                     add_move(depth, coord, coord + 1 + 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 1 + 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
@@ -418,17 +415,15 @@ void get_moves(int coord, int depth) {
                 }
             }
 
-            // взятие проходной пешки
             if (coord > 128 && coord < 144) {
 
-                // проходная пешка справа
                 cell = position[coord + 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
                 if (cell_color == WHITE && is_passed == IS_PASSED_PAWN_UCI) {
                     add_move(depth, coord, coord + 1, FIGURE_TYPE_PAWN, MOVE_TYPE_PASSED_PAWN_WHITE);
                 }
-                // проходная пешка слева
+
                 cell = position[coord - 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
@@ -443,25 +438,17 @@ void get_moves(int coord, int depth) {
 
 }
 
-// добавляем ход в массив
+// add move to array
 void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE_TYPE type) {
 
     int cell = position[current_coord];
     int color = cell & MASK_COLOR;
     int cell_type = cell & MASK_TYPE;
 
-
-    // было бы неплохой оптимизацией делать это тошлько для короля и при шахах
-    // подумай где хранить шах.
-    // если ходит король, или не проверили позицию на шах
-    // тут могут быть связки..
-
     if (!is_legal_move(current_coord, new_coord)) {
 
         return;
     }
-
-    // сортануть ходы, сначала взятие
 
     moves[depth][count_move[depth]].current_position = current_coord;
     moves[depth][count_move[depth]].next_position = new_coord;
@@ -476,7 +463,7 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
     count_move[depth]++;
 }
 
-// MVV-LVA
+// MVV-LVA move sorting
 void sort_move(int depth) {
 
     int max = count_move[depth];
@@ -484,11 +471,11 @@ void sort_move(int depth) {
     int cell, type;
     int cell2, type2;
     // туопй
-    for(int i = 0 ; i < max - 1; i++) {
+    for (int i = 0; i < max - 1; i++) {
         // сравниваем два соседних элемента.
-        for(int j = 0 ; j < max - i - 1 ; j++) {
+        for (int j = 0; j < max - i - 1; j++) {
 
-            if(moves[depth][j].MoveType < moves[depth][j + 1].MoveType) {
+            if (moves[depth][j].MoveType < moves[depth][j + 1].MoveType) {
                 // если они идут в неправильном порядке, то
                 //  меняем их местами.
                 MOVE tmp = moves[depth][j];
@@ -499,23 +486,23 @@ void sort_move(int depth) {
     }
 
     int start;
-    for(start = 0 ; moves[depth][start].MoveType != MOVE_TYPE_EAT && start < max; start++);
+    for (start = 0; moves[depth][start].MoveType != MOVE_TYPE_EAT && start < max; start++);
 
     int stop, test;
-    for(stop = start, test = start; moves[depth][test].MoveType == MOVE_TYPE_EAT; stop++, test++);
+    for (stop = start, test = start; moves[depth][test].MoveType == MOVE_TYPE_EAT; stop++, test++);
 
-    for(int i = start; i < stop - 1; i++) {
-        for(int j = start; j < stop - 1 ; j++) {
+    for (int i = start; i < stop - 1; i++) {
+        for (int j = start; j < stop - 1; j++) {
 
-            if(moves[depth][j].MoveType == MOVE_TYPE_EAT && moves[depth][j + 1].MoveType == MOVE_TYPE_EAT) {
+            if (moves[depth][j].MoveType == MOVE_TYPE_EAT && moves[depth][j + 1].MoveType == MOVE_TYPE_EAT) {
 
-            cell = position[moves[depth][j].next_position];
-            type = cell & MASK_TYPE;
+                cell = position[moves[depth][j].next_position];
+                type = cell & MASK_TYPE;
 
-            cell2 = position[moves[depth][j+1].next_position];
-            type2 = cell2 & MASK_TYPE;
+                cell2 = position[moves[depth][j + 1].next_position];
+                type2 = cell2 & MASK_TYPE;
 
-            if(type > type2) {
+                if (type > type2) {
 
                     MOVE tmp = moves[depth][j];
                     moves[depth][j] = moves[depth][j + 1];
@@ -528,25 +515,25 @@ void sort_move(int depth) {
     }
 
     // в обратном порядке
-    for(int i = start; i < stop - 1; i++) {
-        for(int j = start; j < stop - 1 ; j++) {
+    for (int i = start; i < stop - 1; i++) {
+        for (int j = start; j < stop - 1; j++) {
 
 
             cell = position[moves[depth][j].next_position];
             type = cell & MASK_TYPE;
 
-            cell2 = position[moves[depth][j+1].next_position];
+            cell2 = position[moves[depth][j + 1].next_position];
             type2 = cell2 & MASK_TYPE;
 
-            if(cell == cell2) {
+            if (cell == cell2) {
 
                 cell = position[moves[depth][j].current_position];
                 type = cell & MASK_TYPE;
 
-                cell2 = position[moves[depth][j+1].current_position];
+                cell2 = position[moves[depth][j + 1].current_position];
                 type2 = cell2 & MASK_TYPE;
 
-                if(type < type2) {
+                if (type < type2) {
 
                     MOVE tmp = moves[depth][j];
                     moves[depth][j] = moves[depth][j + 1];
@@ -560,7 +547,7 @@ void sort_move(int depth) {
 
 }
 
-// Если ход верный, нет шаха королю. Наверное, можно как-то ставить бит шаха, подумай+
+// the move is made according to the rules, there are no checks and ligaments
 int is_legal_move(int coord1, int coord2) {
 
     int cell = position[coord1];
@@ -589,7 +576,7 @@ int is_legal_move(int coord1, int coord2) {
     }
 }
 
-// проверяем зашахован ли в текущей пощиции король
+// king is checked?
 int king_is_checked(int color) {
 
     int cell, cell_color;
@@ -630,7 +617,7 @@ int check_king(int coord) {
         n = 0;
         while (KingMove[n] != 0) {
 
-            int new_coord = coord + KingMove[n]; // Смотрим клетку
+            int new_coord = coord + KingMove[n];
             cell = position[new_coord];
 
             if (cell != CELL_EMPTY) {
@@ -652,9 +639,9 @@ int check_king(int coord) {
         n = 0;
         while (QueenMove[n] != 0) {
 
-            int new_coord = coord + QueenMove[n]; // Смотрим клетку
+            int new_coord = coord + QueenMove[n];
 
-            while (position[new_coord] == CELL_EMPTY) { // пока не уперлись в фигуру
+            while (position[new_coord] == CELL_EMPTY) {
 
                 new_coord += QueenMove[n];
             }
@@ -681,7 +668,7 @@ int check_king(int coord) {
 
             int new_coord = coord + RookMove[n];
 
-            while (position[new_coord] == CELL_EMPTY) { // пока не уперлись в фигуру
+            while (position[new_coord] == CELL_EMPTY) {
 
                 new_coord += RookMove[n];
             }
@@ -707,7 +694,7 @@ int check_king(int coord) {
         while (BishopMove[n] != 0) {
 
             int new_coord = coord + BishopMove[n];
-            while (position[new_coord] == CELL_EMPTY) { // пока не уперлись в фигуру
+            while (position[new_coord] == CELL_EMPTY) {
 
                 new_coord += BishopMove[n];
             }
@@ -752,7 +739,7 @@ int check_king(int coord) {
 
         if (color == BLACK) {
 
-            cell = position[coord - 1 + 16]; // поле слева от пешки
+            cell = position[coord - 1 + 16];
             check_type = cell & (MASK_TYPE);
             cell_color = cell & MASK_COLOR;
 
@@ -761,7 +748,7 @@ int check_king(int coord) {
                 return 1;
             }
 
-            cell = position[coord + 1 + 16]; // поле справа от пешки
+            cell = position[coord + 1 + 16];
             check_type = cell & (MASK_TYPE);
             cell_color = cell & MASK_COLOR;
 
@@ -771,8 +758,8 @@ int check_king(int coord) {
             }
         }
         else {
-            //проверим, можно ли есть
-            cell = position[coord - 1 - 16]; // поле слева от пешки
+
+            cell = position[coord - 1 - 16];
             check_type = cell & (MASK_TYPE);
             cell_color = cell & MASK_COLOR;
 
@@ -781,7 +768,7 @@ int check_king(int coord) {
                 return 1;
             }
 
-            cell = position[coord + 1 - 16]; // поле справа от пешки
+            cell = position[coord + 1 - 16];
             check_type = cell & (MASK_TYPE);
             cell_color = cell & MASK_COLOR;
 
@@ -797,6 +784,7 @@ int check_king(int coord) {
     return 0;
 }
 
+// make move, change positions and zobrist
 void make_move(MOVE move, int depth) {
 
     memcpy(old_position[depth], position, 256 * sizeof(int)); // save position
@@ -811,7 +799,7 @@ void make_move(MOVE move, int depth) {
     int new_cell_color = new_cell & MASK_COLOR;
 
     int zobrist_cell_color = ZOBRIST_WHITE;
-    if(cell_color == BLACK) {
+    if (cell_color == BLACK) {
 
         zobrist_cell_color = ZOBRIST_BLACK;
     }
@@ -820,9 +808,9 @@ void make_move(MOVE move, int depth) {
 
     if (cell_type == FIGURE_TYPE_PAWN) {
 
-        cell = cell ^ MASK_PASSED_PAWN_UCI; // если была проходная, то снимаем
+        cell = cell ^ MASK_PASSED_PAWN_UCI; // if pawn is passed, unset flag
 
-        // если сходили пешкой на 2 хода, может можно сделать IS_MOVE
+        // if a move is made on 2 cells, pawn maybe passed
         if (move.current_position - move.next_position == 32 || move.current_position - move.next_position == -32) {
 
             cell = cell | MASK_PASSED_PAWN_UCI;
@@ -831,13 +819,13 @@ void make_move(MOVE move, int depth) {
 
     if (move.MoveType == MOVE_TYPE_SIMPLY || move.MoveType == MOVE_TYPE_EAT) {
 
-        if(move.MoveType == MOVE_TYPE_EAT) {
+        if (move.MoveType == MOVE_TYPE_EAT) {
 
-            current_hash ^=  zobrist_key[new_cell_type][!zobrist_cell_color][move.next_position]; // remove opponent piece
+            current_hash ^= zobrist_key[new_cell_type][!zobrist_cell_color][move.next_position]; // remove opponent piece
         }
 
-        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.current_position];
-        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.next_position];
+        current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.current_position];
+        current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.next_position];
 
         position[move.current_position] = 0;
         position[move.next_position] = cell;
@@ -846,9 +834,9 @@ void make_move(MOVE move, int depth) {
     // take black passed pawn
     if (move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
 
-        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.current_position]; // remove 1 pawn
-        current_hash ^=  zobrist_key[cell_type][!zobrist_cell_color][move.next_position]; // remove 2 pawn
-        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.next_position - 16]; // set 1 pawn
+        current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.current_position]; // remove 1 pawn
+        current_hash ^= zobrist_key[cell_type][!zobrist_cell_color][move.next_position]; // remove 2 pawn
+        current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.next_position - 16]; // set 1 pawn
 
         position[move.current_position] = 0;
         position[move.next_position] = 0;
@@ -858,9 +846,9 @@ void make_move(MOVE move, int depth) {
     // take white passed pawn
     if (move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE) {
 
-        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.current_position]; // remove 1 pawn
-        current_hash ^=  zobrist_key[cell_type][!zobrist_cell_color][move.next_position]; // remove 2 pawn
-        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.next_position + 16]; // set 1 pawn
+        current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.current_position]; // remove 1 pawn
+        current_hash ^= zobrist_key[cell_type][!zobrist_cell_color][move.next_position]; // remove 2 pawn
+        current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.next_position + 16]; // set 1 pawn
 
         position[move.current_position] = 0;
         position[move.next_position] = 0;
@@ -870,13 +858,13 @@ void make_move(MOVE move, int depth) {
     // if pawn conversion, Ailey is alive?
     if (move.MoveType == MOVE_TYPE_CONVERSION) {
 
-        if(new_cell_type != CELL_EMPTY) {
+        if (new_cell_type != CELL_EMPTY) {
 
-            current_hash ^=  zobrist_key[new_cell_type][!zobrist_cell_color][move.next_position];
+            current_hash ^= zobrist_key[new_cell_type][!zobrist_cell_color][move.next_position];
         }
 
-        current_hash ^=  zobrist_key[cell_type][zobrist_cell_color][move.current_position];
-        current_hash ^=  zobrist_key[move.NewFigureType][zobrist_cell_color][move.next_position];
+        current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.current_position];
+        current_hash ^= zobrist_key[move.NewFigureType][zobrist_cell_color][move.next_position];
 
         position[move.current_position] = 0;
         position[move.next_position] = move.NewFigureType | cell_color | IS_MOVE;
@@ -887,11 +875,11 @@ void make_move(MOVE move, int depth) {
         int king_cell = position[move.current_position];
         int rook_cell = position[move.current_position + 3];
 
-        current_hash ^=  zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position]; // remove king
-        current_hash ^=  zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position + 3]; // remove rook
+        current_hash ^= zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position]; // remove king
+        current_hash ^= zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position + 3]; // remove rook
 
-        current_hash ^=  zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position + 2]; // set king
-        current_hash ^=  zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position + 1]; // set rook
+        current_hash ^= zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position + 2]; // set king
+        current_hash ^= zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position + 1]; // set rook
 
         position[move.current_position] = 0;
         position[move.current_position + 3] = 0;
@@ -904,11 +892,11 @@ void make_move(MOVE move, int depth) {
         int king_cell = position[move.current_position];
         int rook_cell = position[move.current_position - 4];
 
-        current_hash ^=  zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position]; // remove king
-        current_hash ^=  zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position - 4]; // remove rook
+        current_hash ^= zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position]; // remove king
+        current_hash ^= zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position - 4]; // remove rook
 
-        current_hash ^=  zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position - 2]; // set king
-        current_hash ^=  zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position - 1]; // set rook
+        current_hash ^= zobrist_key[FIGURE_TYPE_KING][zobrist_cell_color][move.current_position - 2]; // set king
+        current_hash ^= zobrist_key[FIGURE_TYPE_ROOK][zobrist_cell_color][move.current_position - 1]; // set rook
 
         position[move.current_position] = 0;
         position[move.current_position - 4] = 0;
@@ -968,13 +956,13 @@ int get_count_moves(int coord) {
     int type = cell & MASK_TYPE;
 
     int cell_color, is_moved, is_passed;
-    // король
+
     if (type == FIGURE_TYPE_KING) {
 
         n = 0;
         while (KingMove[n] != 0) {
 
-            int new_coord = coord + KingMove[n]; // Смотрим клетку
+            int new_coord = coord + KingMove[n];
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
 
@@ -982,7 +970,7 @@ int get_count_moves(int coord) {
 
                 count++;
             }
-            else if (cell_color == opponent_color) {  // кушаем
+            else if (cell_color == opponent_color) {
 
                 count++;
             }
@@ -990,20 +978,17 @@ int get_count_moves(int coord) {
             n++;
         }
 
-        // рокировки
         cell = position[coord];
         is_moved = cell & MASK_MOVE;
-        if (is_moved != IS_MOVE) { // если король не ходил
+        if (is_moved != IS_MOVE) {
 
-            // короткая рокировка
             if (position[coord + 1] == CELL_EMPTY && position[coord + 2] == CELL_EMPTY) {
                 int is_rook = position[coord + 3];
                 int type_is_rook = is_rook & MASK_TYPE;
                 int rook_moved = is_rook & MASK_MOVE;
 
-                // Если ладья не ходила
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
-                    // Если поля для короля не бьют
+
                     if (is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
 
                         count++;
@@ -1011,17 +996,15 @@ int get_count_moves(int coord) {
                 }
             }
 
-            // длинная рокировка
             if (position[coord - 1] == CELL_EMPTY && position[coord - 2] == CELL_EMPTY &&
-                position[coord - 3] == CELL_EMPTY) { // если клетки пустые
+                position[coord - 3] == CELL_EMPTY) {
 
                 int is_rook = position[coord - 4];
                 int type_is_rook = is_rook & MASK_TYPE;
                 int rook_moved = is_rook & MASK_MOVE;
 
-                // Если ладья не ходила
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
-                    // Если поля для короля не бьют
+
                     if (is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
 
                         count++;
@@ -1128,19 +1111,18 @@ int get_count_moves(int coord) {
 
         is_moved = cell & MASK_MOVE;
 
-        if (color == WHITE) { //если это белая пешка
+        if (color == WHITE) {
 
-            //ход пешкой на одну клетку вперёд
             if (position[coord - 16] == CELL_EMPTY) {
 
-                if (coord > 80 && coord < 96) { // если текущий ряд 7
+                if (coord > 80 && coord < 96) {
 
                     count += 4;
                 }
                 else {
 
                     count++;
-                    if (is_moved != IS_MOVE) { // если пешка не ходила
+                    if (is_moved != IS_MOVE) {
 
                         if (position[coord - 32] == CELL_EMPTY) {
 
@@ -1150,12 +1132,11 @@ int get_count_moves(int coord) {
                 }
             }
 
-            //проверим, можно ли есть
             cell = position[coord - 1 - 16];
             cell_color = cell & MASK_COLOR;
 
             if (cell_color == BLACK) {
-                if (coord > 80 && coord < 96) { // если текущий ряд 7
+                if (coord > 80 && coord < 96) {
 
                     count += 4;
                 }
@@ -1168,7 +1149,7 @@ int get_count_moves(int coord) {
             cell = position[coord + 1 - 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == BLACK) {
-                if (coord > 80 && coord < 96) { // если текущий ряд 7
+                if (coord > 80 && coord < 96) {
 
                     count += 4;
                 }
@@ -1178,10 +1159,8 @@ int get_count_moves(int coord) {
                 }
             }
 
-            // взятие проходной пешки
             if (coord > 112 && coord < 128) {
 
-                // проходная пешка справа
                 cell = position[coord + 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
@@ -1190,7 +1169,6 @@ int get_count_moves(int coord) {
                     count++;
                 }
 
-                // проходная пешка слева
                 cell = position[coord - 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
@@ -1201,11 +1179,11 @@ int get_count_moves(int coord) {
             }
 
         }
-        else { //если это чёрная пешка
+        else {
 
             if (position[coord + 16] == CELL_EMPTY) {
 
-                if (coord > 160 && coord < 176) // если текущий ряд 2
+                if (coord > 160 && coord < 176)
                 {
                     count += 4;
                 }
@@ -1213,7 +1191,7 @@ int get_count_moves(int coord) {
 
                     count++;
 
-                    if (is_moved != IS_MOVE) { // если пешка не ходила
+                    if (is_moved != IS_MOVE) {
                         if (position[coord + 32] == CELL_EMPTY) {
                             count++;
                         }
@@ -1221,12 +1199,11 @@ int get_count_moves(int coord) {
                 }
             }
 
-            //едим слева от пешки
             cell = position[coord - 1 + 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
 
-                if (coord > 160 && coord < 176) { // если текущий ряд 2
+                if (coord > 160 && coord < 176) {
 
                     count += 4;
                 }
@@ -1234,12 +1211,12 @@ int get_count_moves(int coord) {
                     count++;
                 }
             }
-            //едим справа от пешки
+
             cell = position[coord + 1 + 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
 
-                if (coord > 160 && coord < 176) // если текущий ряд 2
+                if (coord > 160 && coord < 176)
                 {
                     count += 4;
                 }
@@ -1249,17 +1226,15 @@ int get_count_moves(int coord) {
                 }
             }
 
-            // взятие проходной пешки
             if (coord > 128 && coord < 144) {
 
-                // проходная пешка справа
                 cell = position[coord + 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
                 if (cell_color == WHITE && is_passed == IS_PASSED_PAWN_UCI) {
                     count++;
                 }
-                // проходная пешка слева
+
                 cell = position[coord - 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
