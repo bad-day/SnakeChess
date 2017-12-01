@@ -19,8 +19,7 @@ extern int max_current_deep; // uci.c the main deep, need change algorithm to it
 extern unsigned int count_nodes; // uci.c count of nodes
 extern MOVE out_move[2]; // uci.c save best move for the UCI
 
-extern HASH_TABLE hash_table_white[MAX_HASH_TABLE_SIZE]; // hash.c
-extern HASH_TABLE hash_table_black[MAX_HASH_TABLE_SIZE]; // hash.c
+extern HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE]; // hash.c
 
 extern unsigned long current_hash; // hash.c
 extern unsigned long zobrist_key_move; // hash.c
@@ -44,12 +43,10 @@ int minimax(int depth, int current_player) {
         score_best = CHECKMATE - depth;
     }
 
-    HASH_TABLE *hash_ptr;
+    current_hash ^= zobrist_key_move;
 
-    if (current_player)
-        hash_ptr = &hash_table_white[current_hash % (MAX_HASH_TABLE_SIZE)];
-    else
-        hash_ptr = &hash_table_black[current_hash % (MAX_HASH_TABLE_SIZE)];
+    HASH_TABLE *hash_ptr;
+    hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
 
     if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
 
@@ -63,7 +60,7 @@ int minimax(int depth, int current_player) {
 
         int last_score = evaluate(current_player);
 
-        hash_to_table(current_hash, last_score, depth, HASH_TABLE_TYPE_EXACT, current_player); // write hash to table
+        hash_to_table(current_hash, last_score, depth, HASH_TABLE_TYPE_EXACT); // write hash to table
 
         return last_score;
     }
@@ -75,17 +72,17 @@ int minimax(int depth, int current_player) {
 
         if (current_player && king_is_checked(WHITE)) {
 
-            hash_to_table(current_hash, -CHECKMATE, depth, HASH_TABLE_TYPE_EXACT, current_player);
+            hash_to_table(current_hash, -CHECKMATE, depth, HASH_TABLE_TYPE_EXACT);
             return -CHECKMATE;
         }
 
         if (!current_player && king_is_checked(BLACK)) {
 
-            hash_to_table(current_hash, CHECKMATE, depth, HASH_TABLE_TYPE_EXACT, current_player);
+            hash_to_table(current_hash, CHECKMATE, depth, HASH_TABLE_TYPE_EXACT);
             return CHECKMATE;
         }
 
-        hash_to_table(current_hash, 0, depth, HASH_TABLE_TYPE_EXACT, current_player);
+        hash_to_table(current_hash, 0, depth, HASH_TABLE_TYPE_EXACT);
         return 0;
     }
 
@@ -126,7 +123,7 @@ int minimax(int depth, int current_player) {
 
     }
 
-    hash_to_table(current_hash, score_best, depth, HASH_TABLE_TYPE_EXACT, current_player);
+    hash_to_table(current_hash, score_best, depth, HASH_TABLE_TYPE_EXACT);
     return score_best;
 }
 
@@ -137,20 +134,16 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
         return UCI_EXIT;
     }
 
+    current_hash ^= zobrist_key_move;
+
     HASH_TABLE *hash_ptr;
-    if (current_player) {
+    hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
 
-        hash_ptr = &hash_table_white[current_hash % (MAX_HASH_TABLE_SIZE)];
-    }
-    else {
-
-        hash_ptr = &hash_table_black[current_hash % (MAX_HASH_TABLE_SIZE)];
-    }
-
-    if (hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
+    if (max_current_deep > 5 && hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
 
         if(hash_ptr->type == HASH_TABLE_TYPE_EXACT) {
-            return hash_ptr->score;
+
+                return hash_ptr->score;
         }
 
         if(hash_ptr->type == HASH_TABLE_TYPE_ALPHA && hash_ptr->score <= alpha) {
@@ -170,8 +163,7 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
 
         int score_out = quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search
 
-        hash_to_table(current_hash, score_out, depth, HASH_TABLE_TYPE_EXACT, current_player); // write hash to table
-
+        hash_to_table(current_hash, score_out, depth, HASH_TABLE_TYPE_EXACT); // write hash to table
         return score_out;
     }
 
@@ -199,13 +191,15 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
 
             if (score >= beta) {
 
-                hash_to_table(current_hash, beta, depth, HASH_TABLE_TYPE_BETA, current_player);
+                hash_to_table(current_hash, beta, depth, HASH_TABLE_TYPE_BETA);
+                //move_to_table(current_hash, depth, moves[depth][i]);
                 return beta;
             }
             if (score > alpha) {
 
                 flag = HASH_TABLE_TYPE_EXACT;
                 alpha = score;
+                //move_to_table(current_hash, depth, moves[depth][i]);
 
                 if (depth == max_current_deep) {
                     out_move[0] = moves[depth][i];
@@ -215,6 +209,6 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
 
     }
 
-    hash_to_table(current_hash, alpha, depth, flag, current_player);
+    hash_to_table(current_hash, alpha, depth, flag);
     return alpha;
 }

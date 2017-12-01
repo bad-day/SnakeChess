@@ -21,7 +21,8 @@ extern unsigned int count_nodes; // uci.c count of nodes
 
 int quiesce(int alpha, int beta, int current_player, int depth) {
 
-    return evaluate(current_player);
+    // if static evaluate, uncomment
+    //return evaluate(current_player);
 
     count_nodes++;
     int stand_pat = evaluate(current_player);
@@ -33,7 +34,7 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
         alpha = stand_pat;
 
     generate_moves(depth, current_player);
-    //sort_move(depth);
+    sort_move(depth);
 
     for (int i = 0; i < 200; i++) {
 
@@ -128,6 +129,7 @@ int evaluate(int player) {
     mobility = get_max_count_move(1) - get_max_count_move(0);
     material = white - black;
 
+    //return material + 5 * mobility;
     if(player) {
 
         return material + 5 * mobility;

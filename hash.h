@@ -32,12 +32,15 @@ struct HASH_TABLE
     int deep;
     int type;
     int score;
+    MOVE move;
 };
 
 void hash_init();
 
 unsigned long get_hash();
 
-void hash_to_table(unsigned long hash_key, int score, int depth, int type, int color);
+void hash_to_table(unsigned long hash_key, int score, int depth, int type);
+
+void move_to_table(unsigned long hash_key, int depth, MOVE move);
 
 #endif //CHESS_HASH_H

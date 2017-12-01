@@ -470,14 +470,13 @@ void sort_move(int depth) {
 
     int cell, type;
     int cell2, type2;
-    // туопй
+    // very bad sort
     for (int i = 0; i < max - 1; i++) {
-        // сравниваем два соседних элемента.
+
         for (int j = 0; j < max - i - 1; j++) {
 
             if (moves[depth][j].MoveType < moves[depth][j + 1].MoveType) {
-                // если они идут в неправильном порядке, то
-                //  меняем их местами.
+
                 MOVE tmp = moves[depth][j];
                 moves[depth][j] = moves[depth][j + 1];
                 moves[depth][j + 1] = tmp;
@@ -514,7 +513,6 @@ void sort_move(int depth) {
         }
     }
 
-    // в обратном порядке
     for (int i = start; i < stop - 1; i++) {
         for (int j = start; j < stop - 1; j++) {
 
@@ -545,6 +543,12 @@ void sort_move(int depth) {
         }
     }
 
+    HASH_TABLE *hash_ptr;
+    hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
+
+    if (hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
+        //moves[depth][0] = hash_ptr->move;
+    }
 }
 
 // the move is made according to the rules, there are no checks and ligaments

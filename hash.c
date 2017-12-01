@@ -6,8 +6,7 @@
 
 extern Board position; //main.c
 
-HASH_TABLE hash_table_white[MAX_HASH_TABLE_SIZE];
-HASH_TABLE hash_table_black[MAX_HASH_TABLE_SIZE];
+HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE];
 unsigned long current_hash;
 
 //hash-table [type piece][color piece][position on 16x16]
@@ -505,7 +504,7 @@ unsigned long zobrist_key[FIGURE_TYPE_PAWN + 1][2][256] =
                 }
         };
 
-//unsigned long zobrist_key_move = 0x54ca3eb5b5f3cb5b; // key for change move
+unsigned long zobrist_key_move = 0x54ca3eb5b5f3cb5b; // key for change move
 //unsigned long zobrist_key_null_move = 0x08d9bc25bebf91b1; // key for null move
 
 void hash_init() {
@@ -514,9 +513,7 @@ void hash_init() {
 
     for (int i = 0; i < MAX_HASH_TABLE_SIZE; i++) {
 
-        hash_table_white[i].type = HASH_TABLE_TYPE_EMPTY;
-        hash_table_black[i].type = HASH_TABLE_TYPE_EMPTY;
-
+        hash_table[i].type = HASH_TABLE_TYPE_EMPTY;
     }
 }
 
@@ -545,32 +542,26 @@ unsigned long get_hash() {
     return key;
 }
 
-void hash_to_table(unsigned long hash_key, int score, int depth, int type, int color) {
+void hash_to_table(unsigned long hash_key, int score, int depth, int type) {
 
-    if (color) {
+    // number in the table by the remainder of the division
+    HASH_TABLE *ptr = &hash_table[hash_key % (MAX_HASH_TABLE_SIZE)];
 
-        // number in the table by the remainder of the division
-        HASH_TABLE *ptr = &hash_table_white[hash_key % (MAX_HASH_TABLE_SIZE)];
+    if (ptr->deep <= depth) {
 
-        if (ptr->deep <= depth) {
-
-            ptr->type = type;
-            ptr->deep = depth;
-            ptr->key = hash_key;
-            ptr->score = score;
-        }
-
-
+        ptr->type = type;
+        ptr->deep = depth;
+        ptr->key = hash_key;
+        ptr->score = score;
     }
-    else {
+}
 
-        HASH_TABLE *ptr = &hash_table_black[hash_key % (MAX_HASH_TABLE_SIZE)];
+void move_to_table(unsigned long hash_key, int depth, MOVE move) {
 
-        if (ptr->deep <= depth) {
-            ptr->type = type;
-            ptr->deep = depth;
-            ptr->key = hash_key;
-            ptr->score = score;
-        }
+    HASH_TABLE *ptr = &hash_table[hash_key % (MAX_HASH_TABLE_SIZE)];
+
+    if (ptr->deep <= depth) {
+
+        ptr->move = move;
     }
 }
