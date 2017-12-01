@@ -7,15 +7,25 @@
 #include "board.h"
 #include "evaluate.h"
 #include "move.h"
+#include "hash.h"
 
 extern Board position; // main.c
 extern MOVE moves[DEPTH][200]; // move.c
+
+extern HASH_TABLE hash_table_white[MAX_HASH_TABLE_SIZE]; // hash.c
+extern HASH_TABLE hash_table_black[MAX_HASH_TABLE_SIZE]; // hash.c
+
+extern unsigned long current_hash; // hash.c
+
+extern unsigned int count_nodes; // uci.c count of nodes
 
 int quiesce(int alpha, int beta, int current_player, int depth) {
 
     return evaluate(current_player);
 
+    count_nodes++;
     int stand_pat = evaluate(current_player);
+
     if( stand_pat >= beta )
         return beta;
 
@@ -23,7 +33,7 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
         alpha = stand_pat;
 
     generate_moves(depth, current_player);
-    sort_move(depth);
+    //sort_move(depth);
 
     for (int i = 0; i < 200; i++) {
 
@@ -31,12 +41,13 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
 
             make_move(moves[depth][i], depth);
 
-            int score =  -quiesce( -beta, -alpha, !current_player, depth - 1);
+            int score = -quiesce( -beta, -alpha, !current_player, depth - 1);
 
             rollback_move(moves[depth][i], depth);
 
             if( score >= beta )
                 return beta;
+
             if( score > alpha )
                 alpha = score;
         }
@@ -112,10 +123,18 @@ int evaluate(int player) {
         }
     }
 
-    int mobility = get_max_count_move(1) - get_max_count_move(0);
+    int mobility, material;
 
-    //int mobility = 0;
-    int material = white - black;
+    mobility = get_max_count_move(1) - get_max_count_move(0);
+    material = white - black;
 
-    return material + 5 * mobility;
+    if(player) {
+
+        return material + 5 * mobility;
+    }
+    else {
+
+        return -(material + 5 * mobility);
+    }
+
 }

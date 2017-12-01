@@ -250,6 +250,7 @@ void* start() {
     uci_work_status = 1;
     while (max_current_deep < DEPTH) {
 
+        count_nodes = 0;
         hash_init();
         time1 = clock();
 
@@ -276,7 +277,7 @@ void* start() {
             //score *= -1;
             move_to_uci(out_move[0], best_move);
         }
-
+        move_to_uci(out_move[0], best_move);
         // тут баг
         //if(score != -UCI_EXIT && score != UCI_EXIT) {
 

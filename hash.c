@@ -520,7 +520,6 @@ void hash_init() {
     }
 }
 
-
 unsigned long get_hash() {
 
     unsigned long key = 0;
@@ -546,25 +545,32 @@ unsigned long get_hash() {
     return key;
 }
 
-void hash_to_table(unsigned long hash_key, int score, int depth, int color) {
+void hash_to_table(unsigned long hash_key, int score, int depth, int type, int color) {
 
     if (color) {
 
         // number in the table by the remainder of the division
         HASH_TABLE *ptr = &hash_table_white[hash_key % (MAX_HASH_TABLE_SIZE)];
 
-        ptr->type = HASH_TABLE_TYPE_EXACT;
-        ptr->deep = depth;
-        ptr->key = hash_key;
-        ptr->score = score;
+        if (ptr->deep <= depth) {
+
+            ptr->type = type;
+            ptr->deep = depth;
+            ptr->key = hash_key;
+            ptr->score = score;
+        }
+
+
     }
     else {
 
         HASH_TABLE *ptr = &hash_table_black[hash_key % (MAX_HASH_TABLE_SIZE)];
 
-        ptr->type = HASH_TABLE_TYPE_EXACT;
-        ptr->deep = depth;
-        ptr->key = hash_key;
-        ptr->score = score;
+        if (ptr->deep <= depth) {
+            ptr->type = type;
+            ptr->deep = depth;
+            ptr->key = hash_key;
+            ptr->score = score;
+        }
     }
 }

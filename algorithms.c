@@ -63,7 +63,7 @@ int minimax(int depth, int current_player) {
 
         int last_score = evaluate(current_player);
 
-        hash_to_table(current_hash, last_score, depth, current_player); // write hash to table
+        hash_to_table(current_hash, last_score, depth, HASH_TABLE_TYPE_EXACT, current_player); // write hash to table
 
         return last_score;
     }
@@ -75,17 +75,17 @@ int minimax(int depth, int current_player) {
 
         if (current_player && king_is_checked(WHITE)) {
 
-            hash_to_table(current_hash, -CHECKMATE, depth, current_player);
+            hash_to_table(current_hash, -CHECKMATE, depth, HASH_TABLE_TYPE_EXACT, current_player);
             return -CHECKMATE;
         }
 
         if (!current_player && king_is_checked(BLACK)) {
 
-            hash_to_table(current_hash, CHECKMATE, depth, current_player);
+            hash_to_table(current_hash, CHECKMATE, depth, HASH_TABLE_TYPE_EXACT, current_player);
             return CHECKMATE;
         }
 
-        hash_to_table(current_hash, 0, depth, current_player);
+        hash_to_table(current_hash, 0, depth, HASH_TABLE_TYPE_EXACT, current_player);
         return 0;
     }
 
@@ -126,6 +126,7 @@ int minimax(int depth, int current_player) {
 
     }
 
+    hash_to_table(current_hash, score_best, depth, HASH_TABLE_TYPE_EXACT, current_player);
     return score_best;
 }
 
@@ -136,129 +137,84 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
         return UCI_EXIT;
     }
 
-    int score_best;
-
     HASH_TABLE *hash_ptr;
+    if (current_player) {
 
-    if (current_player)
-        hash_ptr = &hash_table_white[current_hash & (MAX_HASH_TABLE_SIZE - 1)];
-    else
-        hash_ptr = &hash_table_black[current_hash & (MAX_HASH_TABLE_SIZE - 1)];
+        hash_ptr = &hash_table_white[current_hash % (MAX_HASH_TABLE_SIZE)];
+    }
+    else {
 
-    if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
-
-        //if(hash_ptr->score > alpha && hash_ptr->score < beta)
-        return hash_ptr->score;
+        hash_ptr = &hash_table_black[current_hash % (MAX_HASH_TABLE_SIZE)];
     }
 
+    if (hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
+
+        if(hash_ptr->type == HASH_TABLE_TYPE_EXACT) {
+            return hash_ptr->score;
+        }
+
+        if(hash_ptr->type == HASH_TABLE_TYPE_ALPHA && hash_ptr->score <= alpha) {
+
+            return hash_ptr->score;
+        }
+
+        if(hash_ptr->type == HASH_TABLE_TYPE_BETA && hash_ptr->score >= beta) {
+
+            return hash_ptr->score;
+        }
+    }
 
     if (depth == 0) {
 
-        // count of processed nodes
         count_nodes++;
 
         int score_out = quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search
 
-        hash_to_table(current_hash, score_out, depth, current_player); // write hash to table
+        hash_to_table(current_hash, score_out, depth, HASH_TABLE_TYPE_EXACT, current_player); // write hash to table
 
         return score_out;
     }
 
-    generate_moves(depth, current_player); //  all moves to moves[depth]
+    generate_moves(depth, current_player);
     sort_move(depth);
 
-    if (current_player) {
+    if (moves[depth][0].MoveType == MOVE_TYPE_EMPTY) {
 
-        if (moves[depth][0].MoveType == MOVE_TYPE_EMPTY) {
+        if (king_is_checked(WHITE) || king_is_checked(BLACK)) {
 
-            if (king_is_checked(WHITE)) {
-
-                hash_to_table(current_hash, -CHECKMATE - depth, depth, current_player);
-                return -CHECKMATE - depth;
-            }
-
-            hash_to_table(current_hash, 0, depth, current_player);
-            return 0;
+            return -CHECKMATE - depth;
         }
 
-        score_best = -1000000;
-
-        for (int i = 0; i < 200; i++) {
-
-            if (moves[depth][i].MoveType != MOVE_TYPE_EMPTY) {
-
-                make_move(moves[depth][i], depth);
-                int score = alpha_beta(alpha, beta, depth - 1, !current_player);
-                rollback_move(moves[depth][i], depth);
-
-                if (score > score_best) {
-
-                    score_best = score;
-                    if (depth == max_current_deep) {
-
-                        out_move[1] = moves[depth][i];
-                    }
-                }
-
-                if (score_best > alpha) {
-
-                    alpha = score_best;
-                }
-
-                if (beta <= alpha) {
-
-                    break;
-                }
-            }
-        }
-
-        return score_best;
+        return 0;
     }
-    else {
 
-        if (moves[depth][0].MoveType == MOVE_TYPE_EMPTY) {
+    int flag = HASH_TABLE_TYPE_ALPHA;
+    for (int i = 0; i < 200; i++) {
 
-            if (king_is_checked(BLACK)) {
+        if (moves[depth][i].MoveType != MOVE_TYPE_EMPTY) {
 
-                hash_to_table(current_hash, CHECKMATE + depth, depth, current_player);
-                return CHECKMATE + depth;
+            make_move(moves[depth][i], depth);
+            int score = -alpha_beta(-beta, -alpha, depth - 1, !current_player);
+            rollback_move(moves[depth][i], depth);
+
+            if (score >= beta) {
+
+                hash_to_table(current_hash, beta, depth, HASH_TABLE_TYPE_BETA, current_player);
+                return beta;
             }
+            if (score > alpha) {
 
-            hash_to_table(current_hash, 0, depth, current_player);
-            return 0;
-        }
+                flag = HASH_TABLE_TYPE_EXACT;
+                alpha = score;
 
-        score_best = 1000000;
-
-        for (int i = 0; i < 200; i++) {
-
-            if (moves[depth][i].MoveType != MOVE_TYPE_EMPTY) {
-
-                make_move(moves[depth][i], depth);
-                int score = alpha_beta(alpha, beta, depth - 1, !current_player);
-                rollback_move(moves[depth][i], depth);
-
-                if (score < score_best) {
-
-                    score_best = score;
-                    if (depth == max_current_deep) {
-
-                        out_move[0] = moves[depth][i];
-                    }
-                }
-
-                if (score_best < beta) {
-
-                    beta = score_best;
-                }
-
-                if (beta <= alpha) {
-
-                    break;
+                if (depth == max_current_deep) {
+                    out_move[0] = moves[depth][i];
                 }
             }
         }
 
-        return score_best;
     }
+
+    hash_to_table(current_hash, alpha, depth, flag, current_player);
+    return alpha;
 }
