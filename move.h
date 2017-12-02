@@ -1,7 +1,3 @@
-//
-// Created by valera on 02.11.17.
-//
-
 #ifndef CHESS_MOVE_H
 #define CHESS_MOVE_H
 

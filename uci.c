@@ -1,7 +1,3 @@
-//
-// Created by valera on 10.11.17.
-//
-
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -123,30 +119,30 @@ void fen_to_board(char *str) {
     }
 
 
-    i+=3;
+    i += 3;
     // до следущего пробела,
     while (str[i] != ' ') {
 
 
         // белым разрешена длинная рокировка
-        if(str[i] == 'K') {
-            if(position[187] != 0)
+        if (str[i] == 'K') {
+            if (position[187] != 0)
                 position[187] = FIGURE_TYPE_ROOK | WHITE;
         }
         // белым разрешена короткая рокировка
-        if(str[i] == 'Q') {
-            if(position[180] != 0)
+        if (str[i] == 'Q') {
+            if (position[180] != 0)
                 position[180] = FIGURE_TYPE_ROOK | WHITE;
         }
 
         // белым разрешена длинная рокировка
-        if(str[i] == 'k') {
-            if(position[75] != 0)
+        if (str[i] == 'k') {
+            if (position[75] != 0)
                 position[75] = FIGURE_TYPE_ROOK | BLACK;
         }
         // белым разрешена короткая рокировка
-        if(str[i] == 'q') {
-            if(position[68] != 0)
+        if (str[i] == 'q') {
+            if (position[68] != 0)
                 position[68] = FIGURE_TYPE_ROOK | BLACK;
         }
 
@@ -155,10 +151,10 @@ void fen_to_board(char *str) {
 
     i++;
 
-    if(str[i] != '-') {
+    if (str[i] != '-') {
 
-        int passed_pawn_coord = uci_to_coord(str[i], str[i+1]);
-        if(passed_pawn_coord < 112) {
+        int passed_pawn_coord = uci_to_coord(str[i], str[i + 1]);
+        if (passed_pawn_coord < 112) {
             int cell = position[passed_pawn_coord + 16];
             position[passed_pawn_coord + 16] = cell | IS_PASSED_PAWN_UCI;
         }
@@ -174,7 +170,7 @@ int uci_to_coord(char a, char b) {
 
     int coord = 180;
     coord = coord + a - 'a'; // добавили по иксу
-    coord = coord + ('1' - b)*16 ; // добавили по y
+    coord = coord + ('1' - b) * 16; // добавили по y
 
     return coord;
 }
@@ -242,7 +238,7 @@ void move_to_uci(MOVE move, char *out) {
 }
 
 // thread to infinite analyze
-void* start() {
+void *start() {
 
     time_t time1, time2;
 
@@ -260,15 +256,15 @@ void* start() {
 
         time2 = clock();
 
-        int time_def = (int)((time2 - time1)/1000); // засекаем время
+        int time_def = (int) ((time2 - time1) / 1000); // засекаем время
 
-        if(time_def == 0)
+        if (time_def == 0)
             time_def = 1;
 
         int nodes_by_sec = (int) (count_nodes / (time_def * 1000));
 
         char best_move[100];
-        if(current_player) {
+        if (current_player) {
 
             move_to_uci(out_move[1], best_move);
         }
@@ -281,9 +277,10 @@ void* start() {
         // тут баг
         //if(score != -UCI_EXIT && score != UCI_EXIT) {
 
-            char buf[100];
-            printf("info depth %d nodes %d score cp %d time %d pv %s\n", max_current_deep, count_nodes, score, time_def, best_move);
-            printf("bestmove %s\n",  best_move);
+        char buf[100];
+        printf("info depth %d nodes %d score cp %d time %d pv %s\n", max_current_deep, count_nodes, score, time_def,
+               best_move);
+        printf("bestmove %s\n", best_move);
         //}
 
         fflush(stdout);
@@ -292,7 +289,7 @@ void* start() {
 }
 
 // test bliz
-void* blitz() {
+void *blitz() {
 
     max_current_deep = 2;
     uci_work_status = 1;
@@ -301,7 +298,7 @@ void* blitz() {
 
         int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
 
-        if(current_player) {
+        if (current_player) {
 
             move_to_uci(out_move[1], blitz_best_move);
         }
@@ -316,11 +313,11 @@ void* blitz() {
 // listen GUI
 void uci_listen() {
 
-    char input[100] ;
+    char input[100];
 
-    while(fgets(input, 90, stdin)) {
+    while (fgets(input, 90, stdin)) {
 
-        if(strstr(input, "uci")) {
+        if (strstr(input, "uci")) {
 
             printf("id name Demo_engine\n");
             printf("id author XXX\n");
@@ -328,22 +325,22 @@ void uci_listen() {
             printf("position startpos\n");
         }
 
-        if(strstr(input, "quit")) {
+        if (strstr(input, "quit")) {
 
             printf("quit\n");
         }
 
-        if(strstr(input, "isready")) {
+        if (strstr(input, "isready")) {
 
             printf("readyok\n");
         }
 
-        if(strstr(input, "go")) {
+        if (strstr(input, "go")) {
 
             pthread_create(&thread, NULL, start, NULL);
         }
 
-        if(strstr(input, "go movetime")) {
+        if (strstr(input, "go movetime")) {
 
             time_t time1, time2;
 
@@ -351,13 +348,13 @@ void uci_listen() {
             time1 = clock();
 
             time2 = clock();
-            int time_def = (int)((time2 - time1)/1000);
+            int time_def = (int) ((time2 - time1) / 1000);
 
-            while(time_def < 8000) {
+            while (time_def < 8000) {
 
                 sleep(1);
                 time2 = clock();
-                time_def = (int)((time2 - time1)/1000);
+                time_def = (int) ((time2 - time1) / 1000);
             }
 
             printf("bestmove %s\n", blitz_best_move);
@@ -365,7 +362,7 @@ void uci_listen() {
             uci_work_status = 0;
         }
 
-        if(strstr(input, "position fen ")) {
+        if (strstr(input, "position fen ")) {
 
             uci_work_status = 0;
 
@@ -377,7 +374,7 @@ void uci_listen() {
 
         }
 
-        if(strstr(input, "stop")) {
+        if (strstr(input, "stop")) {
 
             uci_work_status = 0;
         }

@@ -1,7 +1,3 @@
-//
-// Created by valera on 30.10.17.
-//
-
 #ifndef CHESS_BOARD_H
 #define CHESS_BOARD_H
 

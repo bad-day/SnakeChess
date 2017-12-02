@@ -1,8 +1,3 @@
-//
-// Created by valera on 02.11.17.
-//
-
-#include <stdio.h>
 #include "board.h"
 
 // board init

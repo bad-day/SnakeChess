@@ -1,7 +1,3 @@
-//
-// Created by valera on 14.11.17.
-//
-
 #ifndef CHESS_ALGORITHMS_H
 #define CHESS_ALGORITHMS_H
 

@@ -1,7 +1,3 @@
-//
-// Created by valera on 14.11.17.
-//
-
 #include "algorithms.h"
 #include "evaluate.h"
 #include "board.h"
@@ -23,6 +19,7 @@ extern HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE]; // hash.c
 
 extern unsigned long current_hash; // hash.c
 extern unsigned long zobrist_key_move; // hash.c
+extern unsigned long zobrist_key_null_move; // hash.c
 
 int minimax(int depth, int current_player) {
 
@@ -134,38 +131,52 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
         return UCI_EXIT;
     }
 
+    int score;
     current_hash ^= zobrist_key_move;
 
     HASH_TABLE *hash_ptr;
     hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
 
-    if (max_current_deep > 5 && hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
+    if (hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
 
-        if(hash_ptr->type == HASH_TABLE_TYPE_EXACT) {
-
-                return hash_ptr->score;
-        }
-
-        if(hash_ptr->type == HASH_TABLE_TYPE_ALPHA && hash_ptr->score <= alpha) {
+        if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && hash_ptr->score >= beta) {
 
             return hash_ptr->score;
         }
 
-        if(hash_ptr->type == HASH_TABLE_TYPE_BETA && hash_ptr->score >= beta) {
+        if (hash_ptr->type == HASH_TABLE_TYPE_ALPHA && hash_ptr->score <= alpha) {
+
+            return hash_ptr->score;
+        }
+
+        if (hash_ptr->type == HASH_TABLE_TYPE_BETA && hash_ptr->score >= beta) {
 
             return hash_ptr->score;
         }
     }
 
-    if (depth == 0) {
+    if (depth <= 0) {
 
         count_nodes++;
 
-        int score_out = quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search
+        score = quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search
+        hash_to_table(current_hash, score, depth, HASH_TABLE_TYPE_EXACT); // write hash to table
 
-        hash_to_table(current_hash, score_out, depth, HASH_TABLE_TYPE_EXACT); // write hash to table
-        return score_out;
+        return score;
     }
+
+    // try null move
+//    if(depth != max_current_deep ) {
+//
+//        current_hash ^= zobrist_key_null_move;
+//        score = -alpha_beta(-beta, -beta + 1, depth - 1 - 2, current_player);
+//        current_hash ^= zobrist_key_null_move;
+//
+//        if (score >= beta) {
+//            hash_to_table(current_hash, score, depth, HASH_TABLE_TYPE_BETA);
+//            return beta;
+//        }
+//    }
 
     generate_moves(depth, current_player);
     sort_move(depth);
@@ -186,7 +197,7 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
         if (moves[depth][i].MoveType != MOVE_TYPE_EMPTY) {
 
             make_move(moves[depth][i], depth);
-            int score = -alpha_beta(-beta, -alpha, depth - 1, !current_player);
+            score = -alpha_beta(-beta, -alpha, depth - 1, !current_player);
             rollback_move(moves[depth][i], depth);
 
             if (score >= beta) {
@@ -206,7 +217,6 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
                 }
             }
         }
-
     }
 
     hash_to_table(current_hash, alpha, depth, flag);

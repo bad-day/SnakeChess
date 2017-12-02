@@ -1,7 +1,8 @@
-//
-// Created by valera on 28.11.17.
-//
+#include <stdio.h>
+#include <stdlib.h>
 
+#include "board.h"
+#include "move.h"
 #include "hash.h"
 
 extern Board position; //main.c
@@ -28,9 +29,9 @@ void hash_init() {
     zobrist_key_move = randomize_hash();
     zobrist_key_move = randomize_hash();
 
-    for(int i = 0; i < 7; i++) {
-        for(int j = 0; j < 2; j++) {
-            for(int k = 0; k < 256; k++) {
+    for (int i = 0; i < 7; i++) {
+        for (int j = 0; j < 2; j++) {
+            for (int k = 0; k < 256; k++) {
 
                 zobrist_key[i][j][k] = randomize_hash();
             }

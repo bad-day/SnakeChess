@@ -4,6 +4,7 @@
 #include "hash.h"
 
 Board position;
+
 int main() {
 
     move_init(); // initialize move

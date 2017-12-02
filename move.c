@@ -1,7 +1,3 @@
-//
-// Created by valera on 02.11.17.
-//
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1188,8 +1184,7 @@ int get_count_moves(int coord) {
 
             if (position[coord + 16] == CELL_EMPTY) {
 
-                if (coord > 160 && coord < 176)
-                {
+                if (coord > 160 && coord < 176) {
                     count += 4;
                 }
                 else {
@@ -1221,8 +1216,7 @@ int get_count_moves(int coord) {
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
 
-                if (coord > 160 && coord < 176)
-                {
+                if (coord > 160 && coord < 176) {
                     count += 4;
                 }
                 else {

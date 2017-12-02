@@ -1,15 +1,5 @@
-//
-// Created by valera on 28.11.17.
-//
-
 #ifndef CHESS_HASH_H
 #define CHESS_HASH_H
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "board.h"
-#include "move.h"
 
 #define MAX_HASH_TABLE_SIZE (1<<21)
 
@@ -23,8 +13,7 @@
 
 typedef struct HASH_TABLE HASH_TABLE;
 
-struct HASH_TABLE
-{
+struct HASH_TABLE {
     unsigned long key;
     int deep;
     int type;

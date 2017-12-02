@@ -1,7 +1,3 @@
-//
-// Created by valera on 08.11.17.
-//
-
 #include <stdio.h>
 
 #include "board.h"
@@ -27,11 +23,16 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
     count_nodes++;
     int stand_pat = evaluate(current_player);
 
-    if( stand_pat >= beta )
-        return beta;
+    if (stand_pat >= beta) {
 
-    if( alpha < stand_pat )
+        return beta;
+    }
+
+    if (alpha < stand_pat) {
+
         alpha = stand_pat;
+    }
+
 
     generate_moves(depth, current_player);
     sort_move(depth);
@@ -42,15 +43,20 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
 
             make_move(moves[depth][i], depth);
 
-            int score = -quiesce( -beta, -alpha, !current_player, depth - 1);
+            int score = -quiesce(-beta, -alpha, !current_player, depth - 1);
 
             rollback_move(moves[depth][i], depth);
 
-            if( score >= beta )
-                return beta;
+            if (score >= beta) {
 
-            if( score > alpha )
+                return beta;
+            }
+
+            if (score > alpha) {
+
                 alpha = score;
+            }
+
         }
     }
 
@@ -130,7 +136,7 @@ int evaluate(int player) {
     material = white - black;
 
     //return material + 5 * mobility;
-    if(player) {
+    if (player) {
 
         return material + 5 * mobility;
     }
