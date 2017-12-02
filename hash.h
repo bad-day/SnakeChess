@@ -6,6 +6,7 @@
 #define CHESS_HASH_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "board.h"
 #include "move.h"
@@ -15,13 +16,9 @@
 #define ZOBRIST_BLACK 0
 #define ZOBRIST_WHITE 1
 
-
 #define HASH_TABLE_TYPE_EMPTY 0
-
 #define HASH_TABLE_TYPE_EXACT 1
-
 #define HASH_TABLE_TYPE_ALPHA 2
-
 #define HASH_TABLE_TYPE_BETA  3
 
 typedef struct HASH_TABLE HASH_TABLE;
@@ -34,6 +31,8 @@ struct HASH_TABLE
     int score;
     MOVE move;
 };
+
+unsigned long randomize_hash();
 
 void hash_init();
 
