@@ -1,12 +1,11 @@
 CXX			= gcc
 FLAGS		= -pthread
 
-SOURCES		= main.c board.c move.c evaluate.c uci.c algorithms.c hash.c
+SOURCES		= src/main.c src/board.c src/move.c src/evaluate.c src/uci.c src/algorithms.c src/hash.c
 OBJECTS		= $(SOURCES:.c=.o)
 
-chess: $(OBJECTS)
+SnakeChess: $(OBJECTS)
 	$(CC) $(FLAGS) $(OBJECTS) -o $@
-	./chess
 
 clean:
-	-rm -f $(OBJECTS) chess
+	-rm -f $(OBJECTS) SnakeChess

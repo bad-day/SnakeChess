@@ -21,14 +21,19 @@ struct HASH_TABLE {
     MOVE move;
 };
 
-unsigned long randomize_hash();
-
+// initialize zobrist hash
 void hash_init();
 
+// unsigned long random
+unsigned long randomize_hash();
+
+// get hash for current position
 unsigned long get_hash();
 
+// record information in a table by zobrist key
 void hash_to_table(unsigned long hash_key, int score, int depth, int type);
 
+// record move information in a table by zobrist key
 void move_to_table(unsigned long hash_key, int depth, MOVE move);
 
 #endif //CHESS_HASH_H

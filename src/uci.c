@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
@@ -12,16 +13,15 @@
 
 extern Board position; // main.c
 
-pthread_t thread; // for threads
+pthread_t thread; // for thread
 
 int uci_work_status = 0;
-int current_player = 1; // whose turn, 1 for white 0 for black, it's not racy
+int current_player = 1; // whose turn, 1 for white, 0 for black, it's not racy
 int max_current_deep;
 
 unsigned int count_nodes = 0;
 
 MOVE out_move[2]; // save best move for out
-char blitz_best_move[100];
 
 // load board to engine
 void fen_to_board(char *str) {
@@ -62,7 +62,7 @@ void fen_to_board(char *str) {
             arr[k] = FIGURE_TYPE_KING | BLACK;
         }
         if (str[i] == 'p') {
-            if (z == 1) // Если на исходной позиции
+            if (z == 1)
                 arr[k] = FIGURE_TYPE_PAWN | BLACK;
             else
                 arr[k] = FIGURE_TYPE_PAWN | BLACK | IS_MOVE;
@@ -104,7 +104,6 @@ void fen_to_board(char *str) {
         }
     }
 
-    // Утсанавливаем текущего игрока текущего игрока
     int i = 0;
 
     while (str[i] != ' ') {
@@ -120,27 +119,24 @@ void fen_to_board(char *str) {
 
 
     i += 3;
-    // до следущего пробела,
+
     while (str[i] != ' ') {
 
-
-        // белым разрешена длинная рокировка
         if (str[i] == 'K') {
             if (position[187] != 0)
                 position[187] = FIGURE_TYPE_ROOK | WHITE;
         }
-        // белым разрешена короткая рокировка
+
         if (str[i] == 'Q') {
             if (position[180] != 0)
                 position[180] = FIGURE_TYPE_ROOK | WHITE;
         }
 
-        // белым разрешена длинная рокировка
         if (str[i] == 'k') {
             if (position[75] != 0)
                 position[75] = FIGURE_TYPE_ROOK | BLACK;
         }
-        // белым разрешена короткая рокировка
+
         if (str[i] == 'q') {
             if (position[68] != 0)
                 position[68] = FIGURE_TYPE_ROOK | BLACK;
@@ -246,66 +242,42 @@ void *start() {
     uci_work_status = 1;
     while (max_current_deep < DEPTH) {
 
+        char best_move[10], old_best_move[10];
+
         count_nodes = 0;
         hash_init();
+
         time1 = clock();
 
-        //int score = minimax(max_current_deep, current_player); // фик
-
-        int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
+        //int score = minimax(max_current_deep, current_player);
+        int score = alpha_beta(-INF, INF, max_current_deep, current_player);
 
         time2 = clock();
 
-        int time_def = (int) ((time2 - time1) / 1000); // засекаем время
+        int time_def = (int) ((time2 - time1) / 1000);
 
         if (time_def == 0)
             time_def = 1;
 
         int nodes_by_sec = (int) (count_nodes / (time_def * 1000));
 
-        char best_move[100];
-        if (current_player) {
 
-            move_to_uci(out_move[1], best_move);
+        move_to_uci(out_move[0], best_move);
+
+        if (score != -INF && score != INF) {
+
+            printf("info depth %d nodes %d score cp %d time %d pv %s\n", max_current_deep, count_nodes, score, time_def,
+                   best_move);
+
+            memcpy(old_best_move, best_move, 10 * sizeof(char));
         }
         else {
 
-            //score *= -1;
-            move_to_uci(out_move[0], best_move);
+            printf("bestmove %s\n", old_best_move);
+            max_current_deep = DEPTH;
         }
-        move_to_uci(out_move[0], best_move);
-        // тут баг
-        //if(score != -UCI_EXIT && score != UCI_EXIT) {
-
-        char buf[100];
-        printf("info depth %d nodes %d score cp %d time %d pv %s\n", max_current_deep, count_nodes, score, time_def,
-               best_move);
-        printf("bestmove %s\n", best_move);
-        //}
 
         fflush(stdout);
-        max_current_deep++;
-    }
-}
-
-// test bliz
-void *blitz() {
-
-    max_current_deep = 2;
-    uci_work_status = 1;
-
-    while (max_current_deep < DEPTH) {
-
-        int score = alpha_beta(-999999, 999999, max_current_deep, current_player);
-
-        if (current_player) {
-
-            move_to_uci(out_move[1], blitz_best_move);
-        }
-        else {
-            move_to_uci(out_move[0], blitz_best_move);
-        }
-
         max_current_deep++;
     }
 }
@@ -325,9 +297,11 @@ void uci_listen() {
             printf("position startpos\n");
         }
 
-        if (strstr(input, "quit")) {
+        if (strstr(input, "quit") || strstr(input, "exit")) {
 
+            uci_work_status = 0;
             printf("quit\n");
+            return;
         }
 
         if (strstr(input, "isready")) {
@@ -335,29 +309,34 @@ void uci_listen() {
             printf("readyok\n");
         }
 
-        if (strstr(input, "go")) {
+        if (strstr(input, "go infinite")) {
 
             pthread_create(&thread, NULL, start, NULL);
         }
 
         if (strstr(input, "go movetime")) {
 
-            time_t time1, time2;
+            int max_move_time = atoi(&input[11]);
 
-            pthread_create(&thread, NULL, blitz, NULL);
-            time1 = clock();
+            if(!max_move_time) {
 
-            time2 = clock();
-            int time_def = (int) ((time2 - time1) / 1000);
-
-            while (time_def < 8000) {
-
-                sleep(1);
-                time2 = clock();
-                time_def = (int) ((time2 - time1) / 1000);
+                printf("Incorrect max time\n");
+                return;
             }
 
-            printf("bestmove %s\n", blitz_best_move);
+            int time_diff = 0;
+
+            time_t time1, time2;
+
+            pthread_create(&thread, NULL, start, NULL);
+            time1 = clock();
+
+
+            while (time_diff < max_move_time) {
+
+                time2 = clock();
+                time_diff = (int) ((time2 - time1) / 1000);
+            }
 
             uci_work_status = 0;
         }

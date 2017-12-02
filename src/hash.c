@@ -16,12 +16,14 @@ unsigned long zobrist_key[7][2][256];
 unsigned long zobrist_key_move; // key for change move
 unsigned long zobrist_key_null_move; // key for null move
 
+// unsigned long random
 unsigned long randomize_hash() {
 
     return ((unsigned long) rand() ^ ((unsigned long) rand() << 15) ^ ((unsigned long) rand() << 31) ^
             ((unsigned long) rand() << 47) ^ ((unsigned long) rand() << 59));
 }
 
+// initialize zobrist hash
 void hash_init() {
 
     current_hash = get_hash();
@@ -44,6 +46,7 @@ void hash_init() {
     }
 }
 
+// get hash for current position
 unsigned long get_hash() {
 
     unsigned long key = 0;
@@ -69,6 +72,7 @@ unsigned long get_hash() {
     return key;
 }
 
+// record information in a table by zobrist key
 void hash_to_table(unsigned long hash_key, int score, int depth, int type) {
 
     // number in the table by the remainder of the division
@@ -83,8 +87,10 @@ void hash_to_table(unsigned long hash_key, int score, int depth, int type) {
     }
 }
 
+// record move information in a table by zobrist key
 void move_to_table(unsigned long hash_key, int depth, MOVE move) {
 
+    // number in the table by the remainder of the division
     HASH_TABLE *ptr = &hash_table[hash_key % (MAX_HASH_TABLE_SIZE)];
 
     if (ptr->deep <= depth) {

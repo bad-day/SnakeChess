@@ -3,6 +3,8 @@
 
 // max deep
 #define DEPTH 100
+// infinity value
+#define INF 999999
 
 typedef enum MOVE_TYPE MOVE_TYPE;
 typedef struct MOVE MOVE;

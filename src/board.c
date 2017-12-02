@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "board.h"
 
 // board init

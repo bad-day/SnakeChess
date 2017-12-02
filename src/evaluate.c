@@ -56,7 +56,6 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
 
                 alpha = score;
             }
-
         }
     }
 

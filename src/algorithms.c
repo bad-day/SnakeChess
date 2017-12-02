@@ -10,13 +10,13 @@
 extern Board position; // main.c
 
 extern MOVE moves[DEPTH][200]; // move.c
+
 extern int uci_work_status; // uci.c working status from GUI
 extern int max_current_deep; // uci.c the main deep, need change algorithm to iteration mode
 extern unsigned int count_nodes; // uci.c count of nodes
 extern MOVE out_move[2]; // uci.c save best move for the UCI
 
 extern HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE]; // hash.c
-
 extern unsigned long current_hash; // hash.c
 extern unsigned long zobrist_key_move; // hash.c
 extern unsigned long zobrist_key_null_move; // hash.c
@@ -128,7 +128,7 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
 
     if (!uci_work_status) {
 
-        return UCI_EXIT;
+        return -INF;
     }
 
     int score;
@@ -139,7 +139,8 @@ int alpha_beta(int alpha, int beta, int depth, int current_player) {
 
     if (hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
 
-        if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && hash_ptr->score >= beta) {
+        // I can't understand why && (hash_ptr->score >= beta) working more faster, which without this
+        if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && (hash_ptr->score >= beta)) {
 
             return hash_ptr->score;
         }
