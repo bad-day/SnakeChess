@@ -83,7 +83,7 @@ void get_moves(int coord, int depth) {
     int cell = position[coord];
 
     int color = cell & MASK_COLOR;
-    int opponent_color = color ^MASK_COLOR;
+    int opponent_color = color ^ MASK_COLOR;
     int type = cell & MASK_TYPE;
 
     int cell_color, is_moved, is_passed;
@@ -580,24 +580,24 @@ int is_legal_move(int coord1, int coord2) {
 int king_is_checked(int color) {
 
     int cell, cell_color;
-    color = color ^ MASK_COLOR; // цвет оппонента
+    color = color ^ MASK_COLOR; // opponent color
 
-
-    // сканируем доску на поисках фигуры
+    // scan board
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
             if (position[j] != 0) {
                 cell = position[j];
                 cell_color = cell & MASK_COLOR;
-                if (cell_color == color) { // тащим все ходы противника
-                    if (check_king(j))
+                if (cell_color == color) {
+                    if (check_king(j)) {
+
                         return 1;
+                    }
                 }
             }
         }
     }
     return 0;
-
 }
 
 // realisation of check test

@@ -29,7 +29,7 @@ void hash_init() {
     current_hash = get_hash();
 
     zobrist_key_move = randomize_hash();
-    zobrist_key_move = randomize_hash();
+    zobrist_key_null_move = randomize_hash();
 
     for (int i = 0; i < 7; i++) {
         for (int j = 0; j < 2; j++) {

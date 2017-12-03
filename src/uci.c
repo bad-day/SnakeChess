@@ -250,7 +250,7 @@ void *start() {
         time1 = clock();
 
         //int score = minimax(max_current_deep, current_player);
-        int score = alpha_beta(-INF, INF, max_current_deep, current_player);
+        int score = alpha_beta(-INF, INF, max_current_deep, 0, current_player, 0);
 
         time2 = clock();
 
@@ -309,7 +309,7 @@ void uci_listen() {
             printf("readyok\n");
         }
 
-        if (strstr(input, "go infinite")) {
+        if (strstr(input, "go inf")) {
 
             pthread_create(&thread, NULL, start, NULL);
         }

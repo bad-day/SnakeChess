@@ -31,6 +31,7 @@ struct MOVE {
 
     MOVE_TYPE MoveType; // move type
     int NewFigureType; // A new type of figure, if it came out of a pawn
+    int is_check; // move is check ?
 };
 
 // init move
