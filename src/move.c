@@ -44,7 +44,8 @@ void generate_moves(int depth, int current_player) {
     count_move[depth] = 0;
 
     for (int i = 0; i < 200; i++) {
-        moves[depth][i].MoveType = -1;
+
+        moves[depth][i].MoveType = MOVE_TYPE_EMPTY;
     }
 
     int cell, color, cell_color;
@@ -124,7 +125,7 @@ void get_moves(int coord, int depth) {
                 // if rook did't move
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
                     // If the fields for the king do not under attack
-                    if (is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
+                    if (!king_is_checked(color) && is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
 
                         add_move(depth, coord, coord + 2, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O);
                     }
@@ -140,10 +141,9 @@ void get_moves(int coord, int depth) {
                 int rook_moved = is_rook & MASK_MOVE;
 
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
+                    if (!king_is_checked(color) && is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
 
-                    if (is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
-
-                        add_move(depth, coord, coord - 3, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O_0);
+                        add_move(depth, coord, coord - 2, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O_0);
                     }
                 }
             }
@@ -542,9 +542,6 @@ void sort_move(int depth) {
     HASH_TABLE *hash_ptr;
     hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
 
-    if (hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
-        //moves[depth][0] = hash_ptr->move;
-    }
 }
 
 // the move is made according to the rules, there are no checks and ligaments

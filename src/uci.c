@@ -195,11 +195,10 @@ void move_to_uci(MOVE move, char *out) {
 
     get_position(first, first_char);
 
-    //printf("%s", first_char);
     get_position(second, second_char);
 
     if (move.MoveType == MOVE_TYPE_SIMPLY || move.MoveType == MOVE_TYPE_EAT ||
-        move.MoveType == MOVE_TYPE_CASTLING_O_O || move.MoveType == MOVE_TYPE_CASTLING_O_O) {
+        move.MoveType == MOVE_TYPE_CASTLING_O_O || move.MoveType == MOVE_TYPE_CASTLING_O_O_0) {
 
         out[0] = first_char[0];
         out[1] = first_char[1];
@@ -246,6 +245,7 @@ void *start() {
 
         count_nodes = 0;
         hash_init();
+        move_init();
 
         time1 = clock();
 
