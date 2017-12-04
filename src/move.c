@@ -542,6 +542,17 @@ void sort_move(int depth) {
     HASH_TABLE *hash_ptr;
     hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
 
+    if(hash_ptr->level <= depth && hash_ptr->key == current_hash) {
+
+        int count = 0;
+        for (count = 0; moves[depth][count].MoveType != MOVE_TYPE_EMPTY; count++);
+
+        for (int i = count; i > 0; i--) {
+
+            moves[depth][count] = moves[depth][count - 1];
+        }
+        memcpy(&moves[depth][0], &hash_ptr->move, sizeof(MOVE));
+    }
 }
 
 // the move is made according to the rules, there are no checks and ligaments

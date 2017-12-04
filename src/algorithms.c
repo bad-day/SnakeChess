@@ -38,8 +38,8 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, in
     if (hash_ptr->level <= level && hash_ptr->key == current_hash) {
 
         score = hash_ptr->score;
-        // I can't understand why && (hash_ptr->score >= beta) working more faster, which without this
-        if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && (score >= beta)) {
+
+        if (hash_ptr->type == HASH_TABLE_TYPE_EXACT) {
 
             return score;
         }
@@ -64,12 +64,7 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, in
 
     if (depth <= 0 || level >= max_current_deep + 15) {
 
-        count_nodes++;
-
-        score = quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search
-        hash_to_table(current_hash, score, level, HASH_TABLE_TYPE_EXACT); // write hash to table
-
-        return score;
+        return quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search;
     }
 
     // try null move
@@ -95,13 +90,14 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, in
 
     if (moves[level][0].MoveType == MOVE_TYPE_EMPTY) {
 
-        if (king_is_check) {
+        if (king_is_check) { // checkmate
 
             hash_to_table(current_hash, -CHECKMATE + level, level, HASH_TABLE_TYPE_EXACT);
             return -CHECKMATE + level;
         }
 
-        return 0;
+        hash_to_table(current_hash, 0, level, HASH_TABLE_TYPE_EXACT);
+        return 0; // pat
     }
 
     int flag = HASH_TABLE_TYPE_ALPHA;
@@ -116,14 +112,15 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, in
             if (score >= beta) {
 
                 hash_to_table(current_hash, beta, level, HASH_TABLE_TYPE_BETA);
-                //move_to_table(current_hash, ply, moves[ply][i]);
+                move_to_table(current_hash, level, moves[level][i]);
                 return beta;
             }
             if (score > alpha) {
 
-                flag = HASH_TABLE_TYPE_EXACT;
                 alpha = score;
-                //move_to_table(current_hash, ply, moves[ply][i]);
+
+                flag = HASH_TABLE_TYPE_EXACT;
+                move_to_table(current_hash, level, moves[level][i]);
 
                 if (level == 0) {
 

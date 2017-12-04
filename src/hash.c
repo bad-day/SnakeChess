@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "board.h"
 #include "move.h"
@@ -95,6 +96,6 @@ void move_to_table(unsigned long hash_key, int level, MOVE move) {
 
     if (ptr->level <= level) {
 
-        ptr->move = move;
+        memcpy(&ptr->move, &move, sizeof(MOVE));
     }
 }
