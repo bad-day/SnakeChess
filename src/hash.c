@@ -73,27 +73,27 @@ unsigned long get_hash() {
 }
 
 // record information in a table by zobrist key
-void hash_to_table(unsigned long hash_key, int score, int depth, int type) {
+void hash_to_table(unsigned long hash_key, int score, int level, int type) {
 
     // number in the table by the remainder of the division
     HASH_TABLE *ptr = &hash_table[hash_key % (MAX_HASH_TABLE_SIZE)];
 
-    if (ptr->deep <= depth) {
+    if (ptr->level <= level) {
 
         ptr->type = type;
-        ptr->deep = depth;
+        ptr->level = level;
         ptr->key = hash_key;
         ptr->score = score;
     }
 }
 
 // record move information in a table by zobrist key
-void move_to_table(unsigned long hash_key, int depth, MOVE move) {
+void move_to_table(unsigned long hash_key, int level, MOVE move) {
 
     // number in the table by the remainder of the division
     HASH_TABLE *ptr = &hash_table[hash_key % (MAX_HASH_TABLE_SIZE)];
 
-    if (ptr->deep <= depth) {
+    if (ptr->level <= level) {
 
         ptr->move = move;
     }

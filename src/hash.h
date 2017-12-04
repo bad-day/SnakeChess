@@ -15,7 +15,7 @@ typedef struct HASH_TABLE HASH_TABLE;
 
 struct HASH_TABLE {
     unsigned long key;
-    int deep;
+    int level;
     int type;
     int score;
     MOVE move;
@@ -34,6 +34,6 @@ unsigned long get_hash();
 void hash_to_table(unsigned long hash_key, int score, int depth, int type);
 
 // record move information in a table by zobrist key
-void move_to_table(unsigned long hash_key, int depth, MOVE move);
+void move_to_table(unsigned long hash_key, int level, MOVE move);
 
 #endif //CHESS_HASH_H

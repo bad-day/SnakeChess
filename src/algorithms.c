@@ -21,111 +21,7 @@ extern unsigned long current_hash; // hash.c
 extern unsigned long zobrist_key_move; // hash.c // hash.c
 extern unsigned long zobrist_key_null_move; // hash.c
 
-int minimax(int depth, int current_player) {
-
-    int score_best;
-    int score;
-
-    if (!uci_work_status) {
-
-        return UCI_EXIT;
-    }
-
-    if (current_player) {
-
-        score_best = -CHECKMATE + depth;
-    }
-    else {
-
-        score_best = CHECKMATE - depth;
-    }
-
-    current_hash ^= zobrist_key_move;
-
-    HASH_TABLE *hash_ptr;
-    hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
-
-    if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && hash_ptr->deep >= depth && hash_ptr->key == current_hash) {
-
-        return hash_ptr->score;
-    }
-
-    if (depth == 0) { // terminated node
-
-        // count of node
-        count_nodes++;
-
-        int last_score = evaluate(current_player);
-
-        hash_to_table(current_hash, last_score, depth, HASH_TABLE_TYPE_EXACT); // write hash to table
-
-        return last_score;
-    }
-
-    generate_moves(depth, current_player);
-    sort_move(depth);
-
-    if (moves[depth][0].MoveType == MOVE_TYPE_EMPTY) {
-
-        if (current_player && king_is_checked(WHITE)) {
-
-            hash_to_table(current_hash, -CHECKMATE, depth, HASH_TABLE_TYPE_EXACT);
-            return -CHECKMATE;
-        }
-
-        if (!current_player && king_is_checked(BLACK)) {
-
-            hash_to_table(current_hash, CHECKMATE, depth, HASH_TABLE_TYPE_EXACT);
-            return CHECKMATE;
-        }
-
-        hash_to_table(current_hash, 0, depth, HASH_TABLE_TYPE_EXACT);
-        return 0;
-    }
-
-    // going from the moves
-    for (int i = 0; moves[depth][i].MoveType != MOVE_TYPE_EMPTY; i++) {
-
-        make_move(moves[depth][i], depth); // make a move, change board
-
-        score = minimax(depth - 1, !current_player);
-
-        rollback_move(moves[depth][i], depth); // rollback and board
-
-
-        if (current_player) { // maxi
-
-            if (score > score_best) {
-
-                if (depth == max_current_deep) {
-
-                    out_move[1] = moves[depth][i];
-                }
-
-                score_best = score; // max from under three
-            }
-        }
-        else { // mini
-
-            if (score < score_best) {
-
-                if (depth == max_current_deep) {
-
-                    out_move[0] = moves[depth][i];
-                }
-
-                score_best = score;
-            }
-        }
-
-    }
-
-    hash_to_table(current_hash, score_best, depth, HASH_TABLE_TYPE_EXACT);
-    return score_best;
-}
-
-int fist_move = 0;
-int alpha_beta(int alpha, int beta, int depth, int ply, int current_player, int null_move) {
+int alpha_beta(int alpha, int beta, int depth, int level, int current_player, int null_move) {
 
     if (!uci_work_status) {
 
@@ -139,51 +35,52 @@ int alpha_beta(int alpha, int beta, int depth, int ply, int current_player, int 
     HASH_TABLE *hash_ptr;
     hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
 
-    if (hash_ptr->deep >= ply && hash_ptr->key == current_hash) {
+    if (hash_ptr->level <= level && hash_ptr->key == current_hash) {
 
+        score = hash_ptr->score;
         // I can't understand why && (hash_ptr->score >= beta) working more faster, which without this
-        if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && (hash_ptr->score >= beta)) {
+        if (hash_ptr->type == HASH_TABLE_TYPE_EXACT && (score >= beta)) {
 
-            return hash_ptr->score;
+            return score;
         }
 
-        if (hash_ptr->type == HASH_TABLE_TYPE_ALPHA && hash_ptr->score <= alpha) {
+        if (hash_ptr->type == HASH_TABLE_TYPE_ALPHA && score <= alpha) {
 
-            return hash_ptr->score;
+            return score;
         }
 
-        if (hash_ptr->type == HASH_TABLE_TYPE_BETA && hash_ptr->score >= beta) {
+        if (hash_ptr->type == HASH_TABLE_TYPE_BETA && score >= beta) {
 
-            return hash_ptr->score;
+            return score;
         }
     }
 
     // Force the checks
-    if(king_is_checked(WHITE) || king_is_checked(BLACK)) {
+    if (king_is_checked(WHITE) || king_is_checked(BLACK)) {
 
-        depth++;
+        depth += 1;
         king_is_check = 1;
     }
 
-    if (depth <= 0 || ply >= max_current_deep) {
+    if (depth <= 0 || level >= max_current_deep + 15) {
 
         count_nodes++;
 
         score = quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search
-        hash_to_table(current_hash, score, ply, HASH_TABLE_TYPE_EXACT); // write hash to table
+        hash_to_table(current_hash, score, level, HASH_TABLE_TYPE_EXACT); // write hash to table
 
         return score;
     }
 
     // try null move
-    if(ply != 0 && !null_move) {
+    if (level != 0 && !null_move) {
 
         int ev = evaluate(current_player);
 
-        if(ev >= beta && !king_is_check) {
+        if (ev >= beta && !king_is_check) {
 
             current_hash ^= zobrist_key_null_move;
-            score = -alpha_beta(-beta, -beta + 1, depth - 1 - 2, ply + 1, !current_player, 1);
+            score = -alpha_beta(-beta, -beta + 1, depth - 1 - 2, level + 1, !current_player, 1);
             current_hash ^= zobrist_key_null_move;
 
             if (score >= beta) {
@@ -191,17 +88,17 @@ int alpha_beta(int alpha, int beta, int depth, int ply, int current_player, int 
                 return beta;
             }
         }
-
     }
 
-    generate_moves(ply, current_player);
-    sort_move(ply);
+    generate_moves(level, current_player);
+    sort_move(level);
 
-    if (moves[ply][0].MoveType == MOVE_TYPE_EMPTY) {
+    if (moves[level][0].MoveType == MOVE_TYPE_EMPTY) {
 
         if (king_is_check) {
 
-            return -CHECKMATE - ply;
+            hash_to_table(current_hash, -CHECKMATE + level, level, HASH_TABLE_TYPE_EXACT);
+            return -CHECKMATE + level;
         }
 
         return 0;
@@ -210,15 +107,15 @@ int alpha_beta(int alpha, int beta, int depth, int ply, int current_player, int 
     int flag = HASH_TABLE_TYPE_ALPHA;
     for (int i = 0; i < 200; i++) {
 
-        if (moves[ply][i].MoveType != MOVE_TYPE_EMPTY) {
+        if (moves[level][i].MoveType != MOVE_TYPE_EMPTY) {
 
-            make_move(moves[ply][i], ply);
-            score = -alpha_beta(-beta, -alpha, depth - 1, ply + 1, !current_player, null_move);
-            rollback_move(moves[ply][i], ply);
+            make_move(moves[level][i], level);
+            score = -alpha_beta(-beta, -alpha, depth - 1, level + 1, !current_player, null_move);
+            rollback_move(moves[level][i], level);
 
             if (score >= beta) {
 
-                hash_to_table(current_hash, beta, ply, HASH_TABLE_TYPE_BETA);
+                hash_to_table(current_hash, beta, level, HASH_TABLE_TYPE_BETA);
                 //move_to_table(current_hash, ply, moves[ply][i]);
                 return beta;
             }
@@ -228,13 +125,14 @@ int alpha_beta(int alpha, int beta, int depth, int ply, int current_player, int 
                 alpha = score;
                 //move_to_table(current_hash, ply, moves[ply][i]);
 
-                if (ply == 0) {
-                    out_move[0] = moves[ply][i];
+                if (level == 0) {
+
+                    out_move[0] = moves[level][i];
                 }
             }
         }
     }
 
-    hash_to_table(current_hash, alpha, ply, flag);
+    hash_to_table(current_hash, alpha, level, flag);
     return alpha;
 }
