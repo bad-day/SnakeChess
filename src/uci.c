@@ -13,16 +13,11 @@
 
 extern Board position; // main.c
 
-extern HASH_BEST_MOVE_TABLE hash_best_move_table[MAX_HASH_MOVE_TABLE_SIZE];
-extern unsigned long current_hash; // hash.c
-
 pthread_t thread; // for thread
 
 int uci_work_status = 0;
-int current_player = 1; // whose turn, 1 for white, 0 for black, it's not racy
+int uci_current_player = 1; // whose turn, 1 for white, 0 for black, it's not racy
 int max_current_deep;
-
-unsigned int count_nodes = 0;
 
 // load board to engine
 void fen_to_board(char *str) {
@@ -112,10 +107,10 @@ void fen_to_board(char *str) {
     }
 
     if (str[i + 1] == 'w') {
-        current_player = 1;
+        uci_current_player = 1;
     }
     else {
-        current_player = 0;
+        uci_current_player = 0;
     }
 
 
@@ -232,76 +227,6 @@ void move_to_uci(MOVE move, char *out) {
     }
 }
 
-// thread to infinite analyze
-void *start() {
-
-    time_t time1, time2;
-
-    max_current_deep = 1;
-    uci_work_status = 1;
-    while (max_current_deep < DEPTH) {
-
-        char best_move[10], old_best_move[10];
-
-        count_nodes = 0;
-        hash_init();
-        move_init();
-
-        time1 = clock();
-
-        int score = alpha_beta(-INF, INF, max_current_deep, 0, current_player, MOVE_TYPE_EMPTY, 0, 0);
-
-        time2 = clock();
-
-        int time_def = (int) ((time2 - time1) / 1000);
-
-        if (time_def == 0)
-            time_def = 1;
-
-        int nodes_by_sec = (int) (count_nodes / (time_def * 1000));
-
-        if (score != -INF && score != INF) {
-
-            printf("info depth %d nodes %d score cp %d time %d pv ", max_current_deep, count_nodes, score, time_def);
-
-            print_best_moves(0);
-            printf("\n");
-            memcpy(old_best_move, best_move, 10 * sizeof(char));
-        }
-        else {
-
-            printf("bestmove %s\n", old_best_move);
-            max_current_deep = DEPTH;
-        }
-
-        fflush(stdout);
-        max_current_deep++;
-    }
-}
-
-// print three of best moves
-void print_best_moves(int depth) {
-
-    char best_move[10];
-    MOVE move;
-
-    if(depth > max_current_deep -1 )
-        return;
-
-    HASH_BEST_MOVE_TABLE *hash_ptr;
-    hash_ptr = &hash_best_move_table[current_hash % (MAX_HASH_MOVE_TABLE_SIZE)];
-
-    if(hash_ptr->key != current_hash)
-        return;
-
-    move_to_uci(hash_ptr->move, best_move);
-    printf("%s ", best_move);
-
-    make_move(hash_ptr->move, depth);
-    print_best_moves(depth + 1);
-    rollback_move(hash_ptr->move, depth);
-}
-
 // listen GUI
 void uci_listen() {
 
@@ -311,8 +236,8 @@ void uci_listen() {
 
         if (strstr(input, "uci")) {
 
-            printf("id name Demo_engine\n");
-            printf("id author XXX\n");
+            printf("id name Snakechess\n");
+            printf("id author bad-day\n");
             printf("uciok\n");
             printf("position startpos\n");
         }
@@ -331,14 +256,15 @@ void uci_listen() {
 
         if (strstr(input, "go inf")) {
 
-            pthread_create(&thread, NULL, start, NULL);
+            uci_work_status = 1;
+            pthread_create(&thread, NULL, search, NULL);
         }
 
         if (strstr(input, "go movetime")) {
 
             int max_move_time = atoi(&input[11]);
 
-            if(!max_move_time) {
+            if(!max_move_time || max_move_time < 100) {
 
                 printf("Incorrect max time\n");
                 return;
@@ -348,11 +274,12 @@ void uci_listen() {
 
             time_t time1, time2;
 
-            pthread_create(&thread, NULL, start, NULL);
+            uci_work_status = 1;
+            pthread_create(&thread, NULL, search, NULL);
             time1 = clock();
 
 
-            while (time_diff < max_move_time) {
+            while (time_diff < max_move_time - 300) {
 
                 time2 = clock();
                 time_diff = (int) ((time2 - time1) / 1000);

@@ -7,6 +7,8 @@
 #include "hash.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <string.h>
 
 extern Board position; // main.c
 
@@ -14,11 +16,14 @@ extern MOVE moves[DEPTH][200]; // move.c
 
 extern int uci_work_status; // uci.c working status from GUI
 extern int max_current_deep; // uci.c the main deep, need change algorithm to iteration mode
-extern unsigned int count_nodes; // uci.c count of nodes
+extern int uci_current_player; // uci.c the main deep, need change algorithm to iteration mode
 
 extern HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE]; // hash.c
+extern HASH_BEST_MOVE_TABLE hash_best_move_table[MAX_HASH_MOVE_TABLE_SIZE];
 extern unsigned long current_hash; // hash.c
 extern unsigned long zobrist_key_null_move; // hash.c
+
+unsigned int count_nodes; //count of nodes
 
 int alpha_beta(int alpha, int beta, int depth, int level, int current_player, MOVE_TYPE last_move_type, int null_move,
                int extended) {
@@ -155,23 +160,37 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, MO
     return alpha;
 }
 
-/*
-int search() {
+// thread to infinity analyze
+void *search() {
 
+    time_t time1, time2;
     int score = 0;
-    count_nodes = 0;
+    char best_move[10];
 
+    count_nodes = 0;
     for (int depth = 1; depth < DEPTH; depth++) {
 
         int lo = 20;
         int hi = 20;
 
+        max_current_deep = depth;
+        count_nodes = 0;
+
+        time1 = clock();
+        hash_init();
+        move_init();
+
         while (1) {
 
             int alpha = score - lo;
             int beta = score + hi;
-            score = root_search(alpha, beta, depth, 0, current_player);
 
+            score = alpha_beta(alpha, beta, depth, 0, uci_current_player, MOVE_TYPE_EMPTY, 0, 0);
+
+            if (score == -INF || score == INF) {
+
+                break;
+            }
             if (score == alpha) {
 
                 lo *= 5;
@@ -184,11 +203,59 @@ int search() {
 
                 break;
             }
-            if(!uci_work_status) {
-
-                break;
-            }
         }
 
+        time2 = clock();
+
+        int time_def = (int) ((time2 - time1) / 1000);
+
+        if (time_def == 0) {
+
+            time_def = 1;
+        }
+
+        int nodes_by_sec = (int) (count_nodes / (time_def * 1000));
+
+        if (score != -INF && score != INF) {
+
+            printf("info depth %d nodes %d score cp %d time %d pv ", depth, count_nodes, score, time_def);
+            print_best_moves(0, best_move);
+            printf("\n");
+            fflush(stdout);
+        }
+        else {
+
+            depth = DEPTH + 1; // exit loop
+        }
     }
-}*/
+
+    printf("bestmove %s\n", best_move);
+    fflush(stdout);
+}
+
+// print three of best moves
+void print_best_moves(int depth, char *best) {
+
+    char best_move[10];
+    MOVE move;
+
+    if(depth > max_current_deep -1 )
+        return;
+
+    HASH_BEST_MOVE_TABLE *hash_ptr;
+    hash_ptr = &hash_best_move_table[current_hash % (MAX_HASH_MOVE_TABLE_SIZE)];
+
+    if(hash_ptr->key != current_hash)
+        return;
+
+    move_to_uci(hash_ptr->move, best_move);
+    printf("%s ", best_move);
+
+    if(depth == 0) {
+
+        memcpy(best, &best_move, 10*sizeof(char));
+    }
+    make_move(hash_ptr->move, depth);
+    print_best_moves(depth + 1, best);
+    rollback_move(hash_ptr->move, depth);
+}
