@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "config.h"
 #include "board.h"
 #include "evaluate.h"
 #include "move.h"
@@ -19,8 +20,6 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
 
     // if static evaluate, uncomment
     //return evaluate(current_player);
-
-    count_nodes++;
     int stand_pat = evaluate(current_player);
 
     if (stand_pat >= beta) {
@@ -32,7 +31,6 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
 
         alpha = stand_pat;
     }
-
 
     generate_moves(depth, current_player);
     sort_move(depth);
@@ -81,23 +79,23 @@ int evaluate(int player) {
                     switch (type) {
 
                         case FIGURE_TYPE_QUEEN:
-                            white += 900;
+                            white += QUEEN_WEIGH;
                             break;
 
                         case FIGURE_TYPE_ROOK:
-                            white += 500;
+                            white += ROOK_WEIGH;
                             break;
 
                         case FIGURE_TYPE_BISHOP:
-                            white += 300;
+                            white += BISHOP_WEIGH;
                             break;
 
                         case FIGURE_TYPE_KNIGHT:
-                            white += 300;
+                            white += KNIGHT_WEIGH;
                             break;
 
                         case FIGURE_TYPE_PAWN:
-                            white += 100;
+                            white += PAWN_WEIGH;
                             break;
                     }
                 }
@@ -105,23 +103,23 @@ int evaluate(int player) {
                     switch (type) {
 
                         case FIGURE_TYPE_QUEEN:
-                            black += 900;
+                            black += QUEEN_WEIGH;
                             break;
 
                         case FIGURE_TYPE_ROOK:
-                            black += 500;
+                            black += ROOK_WEIGH;
                             break;
 
                         case FIGURE_TYPE_BISHOP:
-                            black += 300;
+                            black += BISHOP_WEIGH;
                             break;
 
                         case FIGURE_TYPE_KNIGHT:
-                            black += 300;
+                            black += KNIGHT_WEIGH;
                             break;
 
                         case FIGURE_TYPE_PAWN:
-                            black += 100;
+                            black += PAWN_WEIGH;
                             break;
                     }
                 }

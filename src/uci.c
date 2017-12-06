@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include "move.h"
+#include "config.h"
 #include "board.h"
 #include "algorithms.h"
 #include "uci.h"
@@ -194,7 +194,6 @@ void move_to_uci(MOVE move, char *out) {
     char second_char[3];
 
     get_position(first, first_char);
-
     get_position(second, second_char);
 
     if (move.MoveType == MOVE_TYPE_SIMPLY || move.MoveType == MOVE_TYPE_EAT ||
@@ -249,8 +248,7 @@ void *start() {
 
         time1 = clock();
 
-        //int score = minimax(max_current_deep, current_player);
-        int score = alpha_beta(-INF, INF, max_current_deep, 0, current_player, 0);
+        int score = alpha_beta(-INF, INF, max_current_deep, 0, current_player, MOVE_TYPE_EMPTY, 0, 0);
 
         time2 = clock();
 

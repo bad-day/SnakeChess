@@ -1,3 +1,4 @@
+#include "config.h"
 #include "algorithms.h"
 #include "evaluate.h"
 #include "board.h"
@@ -18,10 +19,10 @@ extern MOVE out_move[2]; // uci.c save best move for the UCI
 
 extern HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE]; // hash.c
 extern unsigned long current_hash; // hash.c
-extern unsigned long zobrist_key_move; // hash.c // hash.c
 extern unsigned long zobrist_key_null_move; // hash.c
 
-int alpha_beta(int alpha, int beta, int depth, int level, int current_player, int null_move) {
+int alpha_beta(int alpha, int beta, int depth, int level, int current_player, MOVE_TYPE last_move_type, int null_move,
+               int extended) {
 
     if (!uci_work_status) {
 
@@ -29,8 +30,6 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, in
     }
 
     int score, king_is_check = 0;
-
-    current_hash ^= zobrist_key_move;
 
     HASH_TABLE *hash_ptr;
     hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
@@ -58,24 +57,45 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, in
     // Force the checks
     if (king_is_checked(WHITE) || king_is_checked(BLACK)) {
 
-        depth += 1;
+        depth += CHECK_DEEPENING;
+        extended = 1;
         king_is_check = 1;
     }
 
-    if (depth <= 0 || level >= max_current_deep + 15) {
-
-        return quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search;
-    }
-
-    // try null move
-    if (level != 0 && !null_move) {
+    if (level != 0 && !king_is_check && !extended && last_move_type != MOVE_TYPE_EAT) {
 
         int ev = evaluate(current_player);
+        int margin;
 
-        if (ev >= beta && !king_is_check) {
+        // Razoring pruning
+/*        if (!null_move && depth >= 0 && depth <= RAZORING_DEPTH) {
+
+            int razoring_margin_table[5] = {2 * PAWN_WEIGH, 2 * PAWN_WEIGH, 3 * PAWN_WEIGH, 4 * PAWN_WEIGH,
+                                            5 * PAWN_WEIGH};
+            margin = razoring_margin_table[depth];
+            if (ev < beta - margin) {
+
+                return ev;
+            }
+        }*/
+
+        // Futility pruning
+        if (!null_move && depth >= 0 && depth <= FUTILITY_DEPTH) {
+
+            int futility_margin_table[5] = {2 * PAWN_WEIGH, 2 * PAWN_WEIGH, 3 * PAWN_WEIGH, 4 * PAWN_WEIGH,
+                                            5 * PAWN_WEIGH};
+            margin = futility_margin_table[depth];
+            if (ev >= beta + margin) {
+
+                return ev;
+            }
+        }
+
+        if (!null_move && ev >= beta && depth != 0) {
 
             current_hash ^= zobrist_key_null_move;
-            score = -alpha_beta(-beta, -beta + 1, depth - 1 - 2, level + 1, !current_player, 1);
+            score = -alpha_beta(-beta, -beta + 1, depth - 1 - NULL_MOVE_DEPTH, level + 1, !current_player,
+                                last_move_type, 1, extended);
             current_hash ^= zobrist_key_null_move;
 
             if (score >= beta) {
@@ -83,6 +103,12 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, in
                 return beta;
             }
         }
+    }
+
+    if (depth <= 0 || level >= max_current_deep + FORCED_MATE_DEEP) {
+
+        count_nodes++;
+        return quiesce(alpha, beta, current_player, DEPTH - 1); // DEPTH - 1 for quiet search;
     }
 
     generate_moves(level, current_player);
@@ -106,7 +132,8 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, in
         if (moves[level][i].MoveType != MOVE_TYPE_EMPTY) {
 
             make_move(moves[level][i], level);
-            score = -alpha_beta(-beta, -alpha, depth - 1, level + 1, !current_player, null_move);
+            score = -alpha_beta(-beta, -alpha, depth - 1, level + 1, !current_player, moves[level][i].MoveType,
+                                null_move, extended);
             rollback_move(moves[level][i], level);
 
             if (score >= beta) {

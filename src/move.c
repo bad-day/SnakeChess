@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "move.h"
 #include "board.h"
 #include "hash.h"
@@ -13,6 +14,7 @@ extern HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE]; // hash.c
 extern unsigned long current_hash; // hash.c
 extern unsigned long current_hash; // hash.c
 extern unsigned long zobrist_key[FIGURE_TYPE_PAWN + 1][2][256]; // hash.c
+extern unsigned long zobrist_key_move; // hash.c // hash.c
 
 // all moves
 int KingMove[9] = {16, -16, 1, -1, 17, -17, 15, -15, 0};
@@ -797,6 +799,8 @@ void make_move(MOVE move, int depth) {
 
     memcpy(old_position[depth], position, 256 * sizeof(int)); // save position
     old_hash[depth] = current_hash;
+
+    current_hash ^= zobrist_key_move; // update zobrist
 
     int cell = position[move.current_position];
     int cell_type = cell & MASK_TYPE;

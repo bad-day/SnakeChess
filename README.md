@@ -8,5 +8,5 @@ SnakeChess is a simple chess engine written in C.
 * Alpha-beta puring.
 * Quiescence search.
 * Zobrist hashing.
-* Null move pruning.
+* Null move pruning, futility puring.
 * UCI support.
