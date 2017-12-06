@@ -8,18 +8,14 @@
 
 extern Board position; // main.c
 extern MOVE moves[DEPTH][200]; // move.c
-
-extern HASH_TABLE hash_table_white[MAX_HASH_TABLE_SIZE]; // hash.c
-extern HASH_TABLE hash_table_black[MAX_HASH_TABLE_SIZE]; // hash.c
-
 extern unsigned long current_hash; // hash.c
-
 extern unsigned int count_nodes; // uci.c count of nodes
 
 int quiesce(int alpha, int beta, int current_player, int depth) {
 
     // if static evaluate, uncomment
     //return evaluate(current_player);
+    count_nodes++;
     int stand_pat = evaluate(current_player);
 
     if (stand_pat >= beta) {

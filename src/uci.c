@@ -13,6 +13,9 @@
 
 extern Board position; // main.c
 
+extern HASH_BEST_MOVE_TABLE hash_best_move_table[MAX_HASH_MOVE_TABLE_SIZE];
+extern unsigned long current_hash; // hash.c
+
 pthread_t thread; // for thread
 
 int uci_work_status = 0;
@@ -20,8 +23,6 @@ int current_player = 1; // whose turn, 1 for white, 0 for black, it's not racy
 int max_current_deep;
 
 unsigned int count_nodes = 0;
-
-MOVE out_move[2]; // save best move for out
 
 // load board to engine
 void fen_to_board(char *str) {
@@ -259,14 +260,12 @@ void *start() {
 
         int nodes_by_sec = (int) (count_nodes / (time_def * 1000));
 
-
-        move_to_uci(out_move[0], best_move);
-
         if (score != -INF && score != INF) {
 
-            printf("info depth %d nodes %d score cp %d time %d pv %s\n", max_current_deep, count_nodes, score, time_def,
-                   best_move);
+            printf("info depth %d nodes %d score cp %d time %d pv ", max_current_deep, count_nodes, score, time_def);
 
+            print_best_moves(0);
+            printf("\n");
             memcpy(old_best_move, best_move, 10 * sizeof(char));
         }
         else {
@@ -278,6 +277,29 @@ void *start() {
         fflush(stdout);
         max_current_deep++;
     }
+}
+
+// print three of best moves
+void print_best_moves(int depth) {
+
+    char best_move[10];
+    MOVE move;
+
+    if(depth > max_current_deep -1 )
+        return;
+
+    HASH_BEST_MOVE_TABLE *hash_ptr;
+    hash_ptr = &hash_best_move_table[current_hash % (MAX_HASH_MOVE_TABLE_SIZE)];
+
+    if(hash_ptr->key != current_hash)
+        return;
+
+    move_to_uci(hash_ptr->move, best_move);
+    printf("%s ", best_move);
+
+    make_move(hash_ptr->move, depth);
+    print_best_moves(depth + 1);
+    rollback_move(hash_ptr->move, depth);
 }
 
 // listen GUI

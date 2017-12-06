@@ -5,6 +5,8 @@
 #define DEPTH 100
 // infinity value
 #define INF 999999
+// checkmate value
+#define CHECKMATE 50000
 
 #define CHECK_DEEPENING 1
 #define FORCED_MATE_DEEP 15

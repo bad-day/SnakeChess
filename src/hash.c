@@ -9,6 +9,9 @@
 extern Board position; //main.c
 
 HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE];
+HASH_MOVE_TABLE hash_move_table[MAX_HASH_MOVE_TABLE_SIZE];
+HASH_BEST_MOVE_TABLE hash_best_move_table[MAX_HASH_MOVE_TABLE_SIZE];
+
 unsigned long current_hash;
 
 //hash-table [count of type piece][count of piece][position on 16x16]
@@ -44,6 +47,16 @@ void hash_init() {
     for (int i = 0; i < MAX_HASH_TABLE_SIZE; i++) {
 
         hash_table[i].type = HASH_TABLE_TYPE_EMPTY;
+        hash_table[i].level = -1;
+    }
+
+    for (int i = 0; i < MAX_HASH_MOVE_TABLE_SIZE; i++) {
+
+        hash_move_table[i].move.MoveType = MOVE_TYPE_EMPTY;
+        hash_move_table[i].level = -1;
+
+        hash_best_move_table[i].move.MoveType = MOVE_TYPE_EMPTY;
+        hash_best_move_table[i].level = -1;
     }
 }
 
@@ -92,10 +105,26 @@ void hash_to_table(unsigned long hash_key, int score, int level, int type) {
 void move_to_table(unsigned long hash_key, int level, MOVE move) {
 
     // number in the table by the remainder of the division
-    HASH_TABLE *ptr = &hash_table[hash_key % (MAX_HASH_TABLE_SIZE)];
+    HASH_MOVE_TABLE *ptr = &hash_move_table[hash_key % (MAX_HASH_MOVE_TABLE_SIZE)];
 
     if (ptr->level <= level) {
 
+        ptr->key = hash_key;
+        ptr->level = level;
+        memcpy(&ptr->move, &move, sizeof(MOVE));
+    }
+}
+
+// record best move for out
+void best_move_to_table(unsigned long hash_key, int level, MOVE move) {
+
+    // number in the table by the remainder of the division
+    HASH_BEST_MOVE_TABLE *ptr = &hash_best_move_table[hash_key % (MAX_HASH_MOVE_TABLE_SIZE)];
+
+    if (ptr->level <= level) {
+
+        ptr->key = hash_key;
+        ptr->level = level;
         memcpy(&ptr->move, &move, sizeof(MOVE));
     }
 }

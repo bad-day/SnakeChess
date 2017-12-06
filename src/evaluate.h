@@ -1,8 +1,6 @@
 #ifndef CHESS_EVALUATE_H
 #define CHESS_EVALUATE_H
 
-#define CHECKMATE 50000
-
 // analysis terminated nodes
 int evaluate(int player);
 

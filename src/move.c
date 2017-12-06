@@ -10,8 +10,7 @@
 extern Board position; // main.c
 MOVE moves[DEPTH][200]; // all moves to the tree
 
-extern HASH_TABLE hash_table[MAX_HASH_TABLE_SIZE]; // hash.c
-extern unsigned long current_hash; // hash.c
+extern HASH_MOVE_TABLE hash_move_table[MAX_HASH_MOVE_TABLE_SIZE]; // hash.c
 extern unsigned long current_hash; // hash.c
 extern unsigned long zobrist_key[FIGURE_TYPE_PAWN + 1][2][256]; // hash.c
 extern unsigned long zobrist_key_move; // hash.c // hash.c
@@ -541,10 +540,10 @@ void sort_move(int depth) {
         }
     }
 
-    HASH_TABLE *hash_ptr;
-    hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
+    HASH_MOVE_TABLE *hash_ptr;
+    hash_ptr = &hash_move_table[current_hash % (MAX_HASH_MOVE_TABLE_SIZE)];
 
-    if(hash_ptr->level <= depth && hash_ptr->key == current_hash) {
+    if(hash_ptr->level <= depth && hash_ptr->key == current_hash && hash_ptr->move.MoveType != MOVE_TYPE_EMPTY) {
 
         int count = 0;
         for (count = 0; moves[depth][count].MoveType != MOVE_TYPE_EMPTY; count++);

@@ -1,8 +1,6 @@
 #ifndef CHESS_UCI_H
 #define CHESS_UCI_H
 
-#define UCI_EXIT 7777777
-
 // listen GUI
 void uci_listen();
 
@@ -20,5 +18,8 @@ void get_position(int position, char *str);
 
 // change MOVE to form a1-h8
 void move_to_uci(MOVE move, char *out);
+
+// print three of best moves
+void print_best_moves(int max_depth);
 
 #endif //CHESS_UCI_H
