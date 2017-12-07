@@ -185,10 +185,15 @@ void move_to_uci(MOVE move, char *out) {
     int first = move.current_position;
     int second = move.next_position;
 
-    if(move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE || move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
+    if(move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
 
         second -= 16;
     }
+    if(move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE) {
+
+        second += 16;
+    }
+
     char first_char[3];
     char second_char[3];
 
@@ -241,7 +246,6 @@ void uci_listen() {
             printf("id name Snakechess\n");
             printf("id author bad-day\n");
             printf("uciok\n");
-            printf("position startpos\n");
         }
 
         if (strstr(input, "quit") || strstr(input, "exit")) {
