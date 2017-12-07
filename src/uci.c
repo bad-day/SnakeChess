@@ -182,18 +182,20 @@ void get_position(int position, char *str) {
 // change MOVE to form a1-h8
 void move_to_uci(MOVE move, char *out) {
 
-    // получаем координату в нашеим виде e2
     int first = move.current_position;
     int second = move.next_position;
 
+    if(move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE || move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
+
+        second -= 16;
+    }
     char first_char[3];
     char second_char[3];
 
     get_position(first, first_char);
     get_position(second, second_char);
 
-    if (move.MoveType == MOVE_TYPE_SIMPLY || move.MoveType == MOVE_TYPE_EAT ||
-        move.MoveType == MOVE_TYPE_CASTLING_O_O || move.MoveType == MOVE_TYPE_CASTLING_O_O_0) {
+    if (move.MoveType != MOVE_TYPE_CONVERSION) {
 
         out[0] = first_char[0];
         out[1] = first_char[1];
