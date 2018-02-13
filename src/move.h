@@ -1,6 +1,8 @@
 #ifndef CHESS_MOVE_H
 #define CHESS_MOVE_H
 
+#define MOVES_COUNT 200
+
 typedef enum MOVE_TYPE MOVE_TYPE;
 typedef struct MOVE MOVE;
 

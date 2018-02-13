@@ -12,7 +12,7 @@
 
 extern Board position; // main.c
 
-extern MOVE moves[DEPTH][200]; // move.c
+extern MOVE moves[DEPTH][MOVES_COUNT]; // move.c
 
 extern int uci_work_status; // uci.c working status from GUI
 extern int max_current_deep; // uci.c the main deep, need change algorithm to iteration mode
@@ -131,7 +131,7 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, MO
     }
 
     int flag = HASH_TABLE_TYPE_ALPHA;
-    for (int i = 0; i < 200 && moves[level][i].MoveType != MOVE_TYPE_EMPTY; i++) {
+    for (int i = 0; i < MOVES_COUNT && moves[level][i].MoveType != MOVE_TYPE_EMPTY; i++) {
 
         make_move(moves[level][i], level);
         score = -alpha_beta(-beta, -alpha, depth - 1, level + 1, !current_player, moves[level][i].MoveType,

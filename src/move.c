@@ -8,7 +8,7 @@
 #include "hash.h"
 
 extern Board position; // main.c
-MOVE moves[DEPTH][200]; // all moves to the tree
+MOVE moves[DEPTH][MOVES_COUNT]; // all moves to the tree
 
 extern HASH_MOVE_TABLE hash_move_table[MAX_HASH_MOVE_TABLE_SIZE]; // hash.c
 extern unsigned long current_hash; // hash.c
@@ -32,7 +32,7 @@ int count_move[DEPTH];
 void move_init() {
 
     for (int i = 0; i < DEPTH; i++) {
-        for (int j = 0; j < 200; j++) {
+        for (int j = 0; j < MOVES_COUNT; j++) {
 
             moves[i][j].MoveType = MOVE_TYPE_EMPTY;
         }
@@ -44,7 +44,7 @@ void generate_moves(int depth, int current_player) {
 
     count_move[depth] = 0;
 
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < MOVES_COUNT; i++) {
 
         moves[depth][i].MoveType = MOVE_TYPE_EMPTY;
     }
@@ -467,7 +467,8 @@ void sort_move(int depth) {
 
     int cell, type;
     int cell2, type2;
-    // very bad sort
+
+    // bubble sorting, because array is small
     for (int i = 0; i < max - 1; i++) {
 
         for (int j = 0; j < max - i - 1; j++) {

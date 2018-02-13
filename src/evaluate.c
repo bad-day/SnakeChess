@@ -7,7 +7,7 @@
 #include "hash.h"
 
 extern Board position; // main.c
-extern MOVE moves[DEPTH][200]; // move.c
+extern MOVE moves[DEPTH][MOVES_COUNT]; // move.c
 extern unsigned long current_hash; // hash.c
 extern unsigned int count_nodes; // uci.c count of nodes
 
@@ -31,7 +31,7 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
     generate_moves(depth, current_player);
     sort_move(depth);
 
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < MOVES_COUNT; i++) {
 
         if (moves[depth][i].MoveType == MOVE_TYPE_EAT) {
 
