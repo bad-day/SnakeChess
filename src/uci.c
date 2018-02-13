@@ -303,7 +303,11 @@ void uci_listen() {
 
             fen_to_board(changed);
             board_print2(position);
+        }
 
+        if (strstr(input, "board print")) {
+
+            board_print2(position);
         }
 
         if (strstr(input, "stop")) {
