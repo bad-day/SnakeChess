@@ -12,4 +12,5 @@ int additional_points(int type, int color, int coord);
 
 // bonus for king
 int king_additional_points(int coord, int endspiel);
+
 #endif //CHESS_EVALUATE_H

@@ -33,7 +33,6 @@ void move_init() {
 
     for (int i = 0; i < DEPTH; i++) {
         for (int j = 0; j < MOVES_COUNT; j++) {
-
             moves[i][j].MoveType = MOVE_TYPE_EMPTY;
         }
     }
@@ -45,7 +44,6 @@ void generate_moves(int depth, int current_player) {
     count_move[depth] = 0;
 
     for (int i = 0; i < MOVES_COUNT; i++) {
-
         moves[depth][i].MoveType = MOVE_TYPE_EMPTY;
     }
 
@@ -53,11 +51,8 @@ void generate_moves(int depth, int current_player) {
 
     // color of piece
     if (current_player) {
-
         color = WHITE;
-    }
-    else {
-
+    } else {
         color = BLACK;
     }
 
@@ -65,7 +60,6 @@ void generate_moves(int depth, int current_player) {
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
             if (position[j] != 0) {
-
                 cell = position[j];
                 cell_color = cell & MASK_COLOR;
 
@@ -85,27 +79,22 @@ void get_moves(int coord, int depth) {
     int cell = position[coord];
 
     int color = cell & MASK_COLOR;
-    int opponent_color = color ^ MASK_COLOR;
+    int opponent_color = color ^MASK_COLOR;
     int type = cell & MASK_TYPE;
 
     int cell_color, is_moved, is_passed;
 
     // figure type is king
     if (type == FIGURE_TYPE_KING) {
-
         n = 0;
         while (KingMove[n] != 0) {
-
             int new_coord = coord + KingMove[n]; // Watch the cell
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
 
             if (cell == CELL_EMPTY) {
-
                 add_move(depth, coord, new_coord, FIGURE_TYPE_KING, MOVE_TYPE_SIMPLY);
-            }
-            else if (cell_color == opponent_color) { // eat
-
+            } else if (cell_color == opponent_color) { // eat
                 add_move(depth, coord, new_coord, FIGURE_TYPE_KING, MOVE_TYPE_EAT);
             }
 
@@ -116,7 +105,6 @@ void get_moves(int coord, int depth) {
         cell = position[coord];
         is_moved = cell & MASK_MOVE;
         if (is_moved != IS_MOVE) { // if king did't move
-
             // short castling
             if (position[coord + 1] == CELL_EMPTY && position[coord + 2] == CELL_EMPTY) {
                 int is_rook = position[coord + 3];
@@ -127,7 +115,6 @@ void get_moves(int coord, int depth) {
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
                     // If the fields for the king do not under attack
                     if (!king_is_checked(color) && is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
-
                         add_move(depth, coord, coord + 2, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O);
                     }
                 }
@@ -143,7 +130,6 @@ void get_moves(int coord, int depth) {
 
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
                     if (!king_is_checked(color) && is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
-
                         add_move(depth, coord, coord - 2, FIGURE_TYPE_KING, MOVE_TYPE_CASTLING_O_O_0);
                     }
                 }
@@ -152,13 +138,10 @@ void get_moves(int coord, int depth) {
     }
 
     if (type == FIGURE_TYPE_QUEEN) {
-
         n = 0;
         while (QueenMove[n] != 0) {
-
             int new_coord = coord + QueenMove[n];
             while (position[new_coord] == CELL_EMPTY) {
-
                 add_move(depth, coord, new_coord, FIGURE_TYPE_QUEEN, MOVE_TYPE_SIMPLY);
                 new_coord += QueenMove[n];
             }
@@ -166,7 +149,6 @@ void get_moves(int coord, int depth) {
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
             if (cell_color == opponent_color) {
-
                 add_move(depth, coord, new_coord, FIGURE_TYPE_QUEEN, MOVE_TYPE_EAT);
             }
             n++;
@@ -175,13 +157,10 @@ void get_moves(int coord, int depth) {
     }
 
     if (type == FIGURE_TYPE_ROOK) {
-
         n = 0;
         while (RookMove[n] != 0) {
-
             int new_coord = coord + RookMove[n];
             while (position[new_coord] == CELL_EMPTY) {
-
                 add_move(depth, coord, new_coord, FIGURE_TYPE_ROOK, MOVE_TYPE_SIMPLY);
                 new_coord += RookMove[n];
             }
@@ -189,7 +168,6 @@ void get_moves(int coord, int depth) {
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
             if (cell_color == opponent_color) {
-
                 add_move(depth, coord, new_coord, FIGURE_TYPE_ROOK, MOVE_TYPE_EAT);
             }
             n++;
@@ -198,13 +176,10 @@ void get_moves(int coord, int depth) {
     }
 
     if (type == FIGURE_TYPE_BISHOP) {
-
         n = 0;
         while (BishopMove[n] != 0) {
-
             int new_coord = coord + BishopMove[n];
             while (position[new_coord] == CELL_EMPTY) {
-
                 add_move(depth, coord, new_coord, FIGURE_TYPE_BISHOP, MOVE_TYPE_SIMPLY);
                 new_coord += BishopMove[n];
             }
@@ -212,7 +187,6 @@ void get_moves(int coord, int depth) {
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
             if (cell_color == opponent_color) {
-
                 add_move(depth, coord, new_coord, FIGURE_TYPE_BISHOP, MOVE_TYPE_EAT);
             }
             n++;
@@ -221,24 +195,18 @@ void get_moves(int coord, int depth) {
     }
 
     if (type == FIGURE_TYPE_KNIGHT) {
-
         n = 0;
         while (KnightMove[n] != 0) {
-
             int new_coord = coord + KnightMove[n];
             cell = position[new_coord];
 
             if (cell == CELL_EMPTY) {
-
                 add_move(depth, coord, new_coord, FIGURE_TYPE_KNIGHT, MOVE_TYPE_SIMPLY);
-            }
-            else {
-
+            } else {
                 cell = position[new_coord];
                 cell_color = cell & MASK_COLOR;
 
                 if (cell_color == opponent_color) {
-
                     add_move(depth, coord, new_coord, FIGURE_TYPE_KNIGHT, MOVE_TYPE_EAT);
                 }
             }
@@ -249,28 +217,19 @@ void get_moves(int coord, int depth) {
     }
 
     if (type == FIGURE_TYPE_PAWN) {
-
         is_moved = cell & MASK_MOVE;
-
         if (color == WHITE) { // if pawn is white
-
             // move pawn on 1 cell ahead
             if (position[coord - 16] == CELL_EMPTY) {
-
                 if (coord > 80 && coord < 96) { // if the current line 7
-
                     add_move(depth, coord, coord - 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 16, FIGURE_TYPE_BISHOP, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 16, FIGURE_TYPE_KNIGHT, MOVE_TYPE_CONVERSION);
-                }
-                else {
-
+                } else {
                     add_move(depth, coord, coord - 16, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
                     if (is_moved != IS_MOVE) { // if pawn did't move
-
                         if (position[coord - 32] == CELL_EMPTY) {
-
                             add_move(depth, coord, coord - 32, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
                         }
                     }
@@ -283,14 +242,11 @@ void get_moves(int coord, int depth) {
 
             if (cell_color == BLACK) {
                 if (coord > 80 && coord < 96) { // if the current line 7
-
                     add_move(depth, coord, coord - 1 - 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 1 - 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 1 - 16, FIGURE_TYPE_BISHOP, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 1 - 16, FIGURE_TYPE_KNIGHT, MOVE_TYPE_CONVERSION);
-                }
-                else {
-
+                } else {
                     add_move(depth, coord, coord - 1 - 16, FIGURE_TYPE_PAWN, MOVE_TYPE_EAT);
                 }
             }
@@ -300,26 +256,21 @@ void get_moves(int coord, int depth) {
             cell_color = cell & MASK_COLOR;
             if (cell_color == BLACK) {
                 if (coord > 80 && coord < 96) { // if the current line 7
-
                     add_move(depth, coord, coord + 1 - 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 1 - 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 1 - 16, FIGURE_TYPE_BISHOP, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 1 - 16, FIGURE_TYPE_KNIGHT, MOVE_TYPE_CONVERSION);
-                }
-                else {
-
+                } else {
                     add_move(depth, coord, coord + 1 - 16, FIGURE_TYPE_PAWN, MOVE_TYPE_EAT);
                 }
             }
 
             // take a pawwed pawn
             if (coord > 112 && coord < 128) {
-
                 cell = position[coord + 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
                 if (cell_color == BLACK && is_passed == IS_PASSED_PAWN_UCI) {
-
                     add_move(depth, coord, coord + 1, FIGURE_TYPE_PAWN, MOVE_TYPE_PASSED_PAWN_BLACK);
                 }
 
@@ -327,27 +278,19 @@ void get_moves(int coord, int depth) {
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
                 if (cell_color == BLACK && is_passed == IS_PASSED_PAWN_UCI) {
-
                     add_move(depth, coord, coord - 1, FIGURE_TYPE_PAWN, MOVE_TYPE_PASSED_PAWN_BLACK);
                 }
             }
 
-        }
-        else {
-
+        } else {
             if (position[coord + 16] == CELL_EMPTY) {
-
-                if (coord > 160 && coord < 176) // if the current line 2
-                {
+                if (coord > 160 && coord < 176) { // if the current line 2
                     add_move(depth, coord, coord + 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 16, FIGURE_TYPE_BISHOP, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 16, FIGURE_TYPE_KNIGHT, MOVE_TYPE_CONVERSION);
-                }
-                else {
-
+                } else {
                     add_move(depth, coord, coord + 16, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
-
                     if (is_moved != IS_MOVE) {
                         if (position[coord + 32] == CELL_EMPTY) {
                             add_move(depth, coord, coord + 32, FIGURE_TYPE_PAWN, MOVE_TYPE_SIMPLY);
@@ -359,15 +302,12 @@ void get_moves(int coord, int depth) {
             cell = position[coord - 1 + 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
-
                 if (coord > 160 && coord < 176) { // if the current line 2
-
                     add_move(depth, coord, coord - 1 + 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 1 + 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 1 + 16, FIGURE_TYPE_BISHOP, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord - 1 + 16, FIGURE_TYPE_KNIGHT, MOVE_TYPE_CONVERSION);
-                }
-                else {
+                } else {
                     add_move(depth, coord, coord - 1 + 16, FIGURE_TYPE_PAWN, MOVE_TYPE_EAT);
                 }
             }
@@ -375,22 +315,17 @@ void get_moves(int coord, int depth) {
             cell = position[coord + 1 + 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
-
-                if (coord > 160 && coord < 176) // if the current line 2
-                {
+                if (coord > 160 && coord < 176) { // if the current line 2
                     add_move(depth, coord, coord + 1 + 16, FIGURE_TYPE_QUEEN, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 1 + 16, FIGURE_TYPE_ROOK, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 1 + 16, FIGURE_TYPE_BISHOP, MOVE_TYPE_CONVERSION);
                     add_move(depth, coord, coord + 1 + 16, FIGURE_TYPE_KNIGHT, MOVE_TYPE_CONVERSION);
-                }
-                else {
-
+                } else {
                     add_move(depth, coord, coord + 1 + 16, FIGURE_TYPE_PAWN, MOVE_TYPE_EAT);
                 }
             }
 
             if (coord > 128 && coord < 144) {
-
                 cell = position[coord + 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
@@ -402,9 +337,7 @@ void get_moves(int coord, int depth) {
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
                 if (cell_color == WHITE && is_passed == IS_PASSED_PAWN_UCI) {
-
                     add_move(depth, coord, coord - 1, FIGURE_TYPE_PAWN, MOVE_TYPE_PASSED_PAWN_WHITE);
-
                 }
             }
         }
@@ -416,11 +349,9 @@ void get_moves(int coord, int depth) {
 int king_isset(int color) {
 
     int cell, type, cell_color;
-
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
             if (position[j] != 0) {
-
                 cell = position[j];
                 cell_color = cell & MASK_COLOR;
                 type = cell & MASK_TYPE;
@@ -443,7 +374,6 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
     int cell_type = cell & MASK_TYPE;
 
     if (!is_legal_move(current_coord, new_coord)) {
-
         return;
     }
 
@@ -453,7 +383,6 @@ void add_move(int depth, int current_coord, int new_coord, int figure_type, MOVE
     moves[depth][count_move[depth]].MoveType = type;
 
     if (type == MOVE_TYPE_CONVERSION) {
-
         moves[depth][count_move[depth]].NewFigureType = figure_type;
     }
 
@@ -470,11 +399,8 @@ void sort_move(int depth) {
 
     // bubble sorting, because array is small
     for (int i = 0; i < max - 1; i++) {
-
         for (int j = 0; j < max - i - 1; j++) {
-
             if (moves[depth][j].MoveType < moves[depth][j + 1].MoveType) {
-
                 MOVE tmp = moves[depth][j];
                 moves[depth][j] = moves[depth][j + 1];
                 moves[depth][j + 1] = tmp;
@@ -490,9 +416,7 @@ void sort_move(int depth) {
 
     for (int i = start; i < stop - 1; i++) {
         for (int j = start; j < stop - 1; j++) {
-
             if (moves[depth][j].MoveType == MOVE_TYPE_EAT && moves[depth][j + 1].MoveType == MOVE_TYPE_EAT) {
-
                 cell = position[moves[depth][j].next_position];
                 type = cell & MASK_TYPE;
 
@@ -500,21 +424,16 @@ void sort_move(int depth) {
                 type2 = cell2 & MASK_TYPE;
 
                 if (type > type2) {
-
                     MOVE tmp = moves[depth][j];
                     moves[depth][j] = moves[depth][j + 1];
                     moves[depth][j + 1] = tmp;
                 }
-
             }
-
         }
     }
 
     for (int i = start; i < stop - 1; i++) {
         for (int j = start; j < stop - 1; j++) {
-
-
             cell = position[moves[depth][j].next_position];
             type = cell & MASK_TYPE;
 
@@ -522,7 +441,6 @@ void sort_move(int depth) {
             type2 = cell2 & MASK_TYPE;
 
             if (cell == cell2) {
-
                 cell = position[moves[depth][j].current_position];
                 type = cell & MASK_TYPE;
 
@@ -530,7 +448,6 @@ void sort_move(int depth) {
                 type2 = cell2 & MASK_TYPE;
 
                 if (type < type2) {
-
                     MOVE tmp = moves[depth][j];
                     moves[depth][j] = moves[depth][j + 1];
                     moves[depth][j + 1] = tmp;
@@ -544,13 +461,11 @@ void sort_move(int depth) {
     HASH_MOVE_TABLE *hash_ptr;
     hash_ptr = &hash_move_table[current_hash % (MAX_HASH_MOVE_TABLE_SIZE)];
 
-    if(hash_ptr->level <= depth && hash_ptr->key == current_hash && hash_ptr->move.MoveType != MOVE_TYPE_EMPTY) {
-
+    if (hash_ptr->level <= depth && hash_ptr->key == current_hash && hash_ptr->move.MoveType != MOVE_TYPE_EMPTY) {
         int count = 0;
         for (count = 0; moves[depth][count].MoveType != MOVE_TYPE_EMPTY; count++);
 
         for (int i = count; i > 0; i--) {
-
             moves[depth][count] = moves[depth][count - 1];
         }
         memcpy(&moves[depth][0], &hash_ptr->move, sizeof(MOVE));
@@ -569,16 +484,12 @@ int is_legal_move(int coord1, int coord2) {
     position[coord1] = 0;
     position[coord2] = cell;
 
-
     if (king_is_checked(color)) {
-
         position[coord1] = cell;
         position[coord2] = cell2;
 
         return 0;
-    }
-    else {
-
+    } else {
         position[coord1] = cell;
         position[coord2] = cell2;
 
@@ -600,7 +511,6 @@ int king_is_checked(int color) {
                 cell_color = cell & MASK_COLOR;
                 if (cell_color == color) {
                     if (check_king(j)) {
-
                         return 1;
                     }
                 }
@@ -623,18 +533,14 @@ int check_king(int coord) {
     int check_type, cell_color;
 
     if (type == FIGURE_TYPE_KING) {
-
         n = 0;
         while (KingMove[n] != 0) {
-
             int new_coord = coord + KingMove[n];
             cell = position[new_coord];
 
             if (cell != CELL_EMPTY) {
-
                 check_type = cell & MASK_TYPE;
                 if (check_type == FIGURE_TYPE_KING) {
-
                     return 1;
                 }
             }
@@ -645,14 +551,11 @@ int check_king(int coord) {
     }
 
     if (type == FIGURE_TYPE_QUEEN) {
-
         n = 0;
         while (QueenMove[n] != 0) {
-
             int new_coord = coord + QueenMove[n];
 
             while (position[new_coord] == CELL_EMPTY) {
-
                 new_coord += QueenMove[n];
             }
 
@@ -661,7 +564,6 @@ int check_king(int coord) {
             cell_color = cell & MASK_COLOR;
 
             if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
-
                 return 1;
             }
 
@@ -672,14 +574,10 @@ int check_king(int coord) {
     }
 
     if (type == FIGURE_TYPE_ROOK) {
-
         n = 0;
         while (RookMove[n] != 0) {
-
             int new_coord = coord + RookMove[n];
-
             while (position[new_coord] == CELL_EMPTY) {
-
                 new_coord += RookMove[n];
             }
 
@@ -688,7 +586,6 @@ int check_king(int coord) {
             cell_color = cell & MASK_COLOR;
 
             if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
-
                 return 1;
             }
 
@@ -699,13 +596,10 @@ int check_king(int coord) {
     }
 
     if (type == FIGURE_TYPE_BISHOP) {
-
         n = 0;
         while (BishopMove[n] != 0) {
-
             int new_coord = coord + BishopMove[n];
             while (position[new_coord] == CELL_EMPTY) {
-
                 new_coord += BishopMove[n];
             }
 
@@ -714,7 +608,6 @@ int check_king(int coord) {
             cell_color = cell & MASK_COLOR;
 
             if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
-
                 return 1;
             }
 
@@ -725,17 +618,14 @@ int check_king(int coord) {
     }
 
     if (type == FIGURE_TYPE_KNIGHT) {
-
         n = 0;
         while (KnightMove[n] != 0) {
-
             int new_coord = coord + KnightMove[n];
             cell = position[new_coord];
             check_type = cell & (MASK_TYPE);
             cell_color = cell & MASK_COLOR;
 
             if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
-
                 return 1;
             }
 
@@ -746,15 +636,12 @@ int check_king(int coord) {
     }
 
     if (type == FIGURE_TYPE_PAWN) {
-
         if (color == BLACK) {
-
             cell = position[coord - 1 + 16];
             check_type = cell & (MASK_TYPE);
             cell_color = cell & MASK_COLOR;
 
             if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
-
                 return 1;
             }
 
@@ -763,18 +650,14 @@ int check_king(int coord) {
             cell_color = cell & MASK_COLOR;
 
             if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
-
                 return 1;
             }
-        }
-        else {
-
+        } else {
             cell = position[coord - 1 - 16];
             check_type = cell & (MASK_TYPE);
             cell_color = cell & MASK_COLOR;
 
             if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
-
                 return 1;
             }
 
@@ -783,7 +666,6 @@ int check_king(int coord) {
             cell_color = cell & MASK_COLOR;
 
             if (check_type == FIGURE_TYPE_KING && cell_color == opponent_color) {
-
                 return 1;
             }
         }
@@ -812,27 +694,21 @@ void make_move(MOVE move, int depth) {
 
     int zobrist_cell_color = ZOBRIST_WHITE;
     if (cell_color == BLACK) {
-
         zobrist_cell_color = ZOBRIST_BLACK;
     }
 
     position[move.current_position] = cell | IS_MOVE;
 
     if (cell_type == FIGURE_TYPE_PAWN) {
-
         cell = cell ^ MASK_PASSED_PAWN_UCI; // if pawn is passed, unset flag
-
         // if a move is made on 2 cells, pawn maybe passed
         if (move.current_position - move.next_position == 32 || move.current_position - move.next_position == -32) {
-
             cell = cell | MASK_PASSED_PAWN_UCI;
         }
     }
 
     if (move.MoveType == MOVE_TYPE_SIMPLY || move.MoveType == MOVE_TYPE_EAT) {
-
         if (move.MoveType == MOVE_TYPE_EAT) {
-
             current_hash ^= zobrist_key[new_cell_type][!zobrist_cell_color][move.next_position]; // remove opponent piece
         }
 
@@ -845,7 +721,6 @@ void make_move(MOVE move, int depth) {
 
     // take black passed pawn
     if (move.MoveType == MOVE_TYPE_PASSED_PAWN_BLACK) {
-
         current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.current_position]; // remove 1 pawn
         current_hash ^= zobrist_key[cell_type][!zobrist_cell_color][move.next_position]; // remove 2 pawn
         current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.next_position - 16]; // set 1 pawn
@@ -857,7 +732,6 @@ void make_move(MOVE move, int depth) {
 
     // take white passed pawn
     if (move.MoveType == MOVE_TYPE_PASSED_PAWN_WHITE) {
-
         current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.current_position]; // remove 1 pawn
         current_hash ^= zobrist_key[cell_type][!zobrist_cell_color][move.next_position]; // remove 2 pawn
         current_hash ^= zobrist_key[cell_type][zobrist_cell_color][move.next_position + 16]; // set 1 pawn
@@ -869,9 +743,7 @@ void make_move(MOVE move, int depth) {
 
     // if pawn conversion, Ailey is alive?
     if (move.MoveType == MOVE_TYPE_CONVERSION) {
-
         if (new_cell_type != CELL_EMPTY) {
-
             current_hash ^= zobrist_key[new_cell_type][!zobrist_cell_color][move.next_position];
         }
 
@@ -883,7 +755,6 @@ void make_move(MOVE move, int depth) {
     }
 
     if (move.MoveType == MOVE_TYPE_CASTLING_O_O) {
-
         int king_cell = position[move.current_position];
         int rook_cell = position[move.current_position + 3];
 
@@ -900,7 +771,6 @@ void make_move(MOVE move, int depth) {
     }
 
     if (move.MoveType == MOVE_TYPE_CASTLING_O_O_0) {
-
         int king_cell = position[move.current_position];
         int rook_cell = position[move.current_position - 4];
 
@@ -930,11 +800,8 @@ int get_max_count_move(int current_player) {
     int cell, color, cell_color;
 
     if (current_player) {
-
         color = WHITE;
-    }
-    else {
-
+    } else {
         color = BLACK;
     }
 
@@ -945,9 +812,7 @@ int get_max_count_move(int current_player) {
 
                 cell = position[j];
                 cell_color = cell & MASK_COLOR;
-
                 if (cell_color == color) {
-
                     count += get_count_moves(j);
                 }
             }
@@ -971,39 +836,30 @@ int get_count_moves(int coord) {
     int cell_color, is_moved, is_passed;
 
     if (type == FIGURE_TYPE_KING) {
-
         n = 0;
         while (KingMove[n] != 0) {
-
             int new_coord = coord + KingMove[n];
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
 
             if (cell == CELL_EMPTY) {
-
+                count++;
+            } else if (cell_color == opponent_color) {
                 count++;
             }
-            else if (cell_color == opponent_color) {
-
-                count++;
-            }
-
             n++;
         }
 
         cell = position[coord];
         is_moved = cell & MASK_MOVE;
         if (is_moved != IS_MOVE) {
-
             if (position[coord + 1] == CELL_EMPTY && position[coord + 2] == CELL_EMPTY) {
                 int is_rook = position[coord + 3];
                 int type_is_rook = is_rook & MASK_TYPE;
                 int rook_moved = is_rook & MASK_MOVE;
 
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
-
                     if (is_legal_move(coord, coord + 1) && is_legal_move(coord, coord + 2)) {
-
                         count++;
                     }
                 }
@@ -1011,15 +867,12 @@ int get_count_moves(int coord) {
 
             if (position[coord - 1] == CELL_EMPTY && position[coord - 2] == CELL_EMPTY &&
                 position[coord - 3] == CELL_EMPTY) {
-
                 int is_rook = position[coord - 4];
                 int type_is_rook = is_rook & MASK_TYPE;
                 int rook_moved = is_rook & MASK_MOVE;
 
                 if (type_is_rook == FIGURE_TYPE_ROOK && rook_moved != IS_MOVE) {
-
                     if (is_legal_move(coord, coord - 1) && is_legal_move(coord, coord - 2)) {
-
                         count++;
                     }
                 }
@@ -1028,13 +881,10 @@ int get_count_moves(int coord) {
     }
 
     if (type == FIGURE_TYPE_QUEEN) {
-
         n = 0;
         while (QueenMove[n] != 0) {
-
             int new_coord = coord + QueenMove[n];
             while (position[new_coord] == CELL_EMPTY) {
-
                 count++;
                 new_coord += QueenMove[n];
             }
@@ -1042,7 +892,6 @@ int get_count_moves(int coord) {
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
             if (cell_color == opponent_color) {
-
                 count++;
             }
             n++;
@@ -1050,13 +899,10 @@ int get_count_moves(int coord) {
     }
 
     if (type == FIGURE_TYPE_ROOK) {
-
         n = 0;
         while (RookMove[n] != 0) {
-
             int new_coord = coord + RookMove[n];
             while (position[new_coord] == CELL_EMPTY) {
-
                 count++;
                 new_coord += RookMove[n];
             }
@@ -1064,7 +910,6 @@ int get_count_moves(int coord) {
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
             if (cell_color == opponent_color) {
-
                 count++;
             }
             n++;
@@ -1072,13 +917,10 @@ int get_count_moves(int coord) {
     }
 
     if (type == FIGURE_TYPE_BISHOP) {
-
         n = 0;
         while (BishopMove[n] != 0) {
-
             int new_coord = coord + BishopMove[n];
             while (position[new_coord] == CELL_EMPTY) {
-
                 count++;
                 new_coord += BishopMove[n];
             }
@@ -1086,7 +928,6 @@ int get_count_moves(int coord) {
             cell = position[new_coord];
             cell_color = cell & MASK_COLOR;
             if (cell_color == opponent_color) {
-
                 count++;
             }
             n++;
@@ -1094,24 +935,18 @@ int get_count_moves(int coord) {
     }
 
     if (type == FIGURE_TYPE_KNIGHT) {
-
         n = 0;
         while (KnightMove[n] != 0) {
-
             int new_coord = coord + KnightMove[n];
             cell = position[new_coord];
 
             if (cell == CELL_EMPTY) {
-
                 count++;
-            }
-            else {
-
+            } else {
                 cell = position[new_coord];
                 cell_color = cell & MASK_COLOR;
 
                 if (cell_color == opponent_color) {
-
                     count++;
                 }
             }
@@ -1121,24 +956,15 @@ int get_count_moves(int coord) {
     }
 
     if (type == FIGURE_TYPE_PAWN) {
-
         is_moved = cell & MASK_MOVE;
-
         if (color == WHITE) {
-
             if (position[coord - 16] == CELL_EMPTY) {
-
                 if (coord > 80 && coord < 96) {
-
                     count += 4;
-                }
-                else {
-
+                } else {
                     count++;
                     if (is_moved != IS_MOVE) {
-
                         if (position[coord - 32] == CELL_EMPTY) {
-
                             count++;
                         }
                     }
@@ -1150,11 +976,8 @@ int get_count_moves(int coord) {
 
             if (cell_color == BLACK) {
                 if (coord > 80 && coord < 96) {
-
                     count += 4;
-                }
-                else {
-
+                } else {
                     count++;
                 }
             }
@@ -1163,22 +986,17 @@ int get_count_moves(int coord) {
             cell_color = cell & MASK_COLOR;
             if (cell_color == BLACK) {
                 if (coord > 80 && coord < 96) {
-
                     count += 4;
-                }
-                else {
-
+                } else {
                     count++;
                 }
             }
 
             if (coord > 112 && coord < 128) {
-
                 cell = position[coord + 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
                 if (cell_color == BLACK && is_passed == IS_PASSED_PAWN_UCI) {
-
                     count++;
                 }
 
@@ -1186,23 +1004,16 @@ int get_count_moves(int coord) {
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
                 if (cell_color == BLACK && is_passed == IS_PASSED_PAWN_UCI) {
-
                     count++;
                 }
             }
 
-        }
-        else {
-
+        } else {
             if (position[coord + 16] == CELL_EMPTY) {
-
                 if (coord > 160 && coord < 176) {
                     count += 4;
-                }
-                else {
-
+                } else {
                     count++;
-
                     if (is_moved != IS_MOVE) {
                         if (position[coord + 32] == CELL_EMPTY) {
                             count++;
@@ -1214,12 +1025,9 @@ int get_count_moves(int coord) {
             cell = position[coord - 1 + 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
-
                 if (coord > 160 && coord < 176) {
-
                     count += 4;
-                }
-                else {
+                } else {
                     count++;
                 }
             }
@@ -1227,18 +1035,14 @@ int get_count_moves(int coord) {
             cell = position[coord + 1 + 16];
             cell_color = cell & MASK_COLOR;
             if (cell_color == WHITE) {
-
                 if (coord > 160 && coord < 176) {
                     count += 4;
-                }
-                else {
-
+                } else {
                     count++;
                 }
             }
 
             if (coord > 128 && coord < 144) {
-
                 cell = position[coord + 1];
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
@@ -1250,9 +1054,7 @@ int get_count_moves(int coord) {
                 cell_color = cell & MASK_COLOR;
                 is_passed = cell & MASK_PASSED_PAWN_UCI;
                 if (cell_color == WHITE && is_passed == IS_PASSED_PAWN_UCI) {
-
                     count++;
-
                 }
             }
         }

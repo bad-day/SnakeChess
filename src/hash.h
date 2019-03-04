@@ -52,4 +52,5 @@ void move_to_table(unsigned long hash_key, int level, MOVE move);
 
 //
 void best_move_to_table(unsigned long hash_key, int level, MOVE move);
+
 #endif //CHESS_HASH_H

@@ -4,8 +4,9 @@
 // board init
 void board_init(Board board) {
 
-    for (int i = 0; i < 256; i++) // set border flag
+    for (int i = 0; i < 256; i++) { // set border flag
         board[i] = BORDER;
+    }
 
     // black figures
     board[68] = FIGURE_TYPE_ROOK | BLACK;
@@ -17,8 +18,9 @@ void board_init(Board board) {
     board[74] = FIGURE_TYPE_KNIGHT | BLACK;
     board[75] = FIGURE_TYPE_ROOK | BLACK;
 
-    for (int i = 84; i < 92; i++)
+    for (int i = 84; i < 92; i++) {
         board[i] = FIGURE_TYPE_PAWN | BLACK;
+    }
 
     // white figures
     board[180] = FIGURE_TYPE_ROOK | WHITE;
@@ -30,23 +32,25 @@ void board_init(Board board) {
     board[186] = FIGURE_TYPE_KNIGHT | WHITE;
     board[187] = FIGURE_TYPE_ROOK | WHITE;
 
-    for (int i = 164; i < 172; i++)
+    for (int i = 164; i < 172; i++) {
         board[i] = FIGURE_TYPE_PAWN | WHITE;
+    }
 
     // empty cell
     for (int i = 0; i < 4; i++) {
-        for (int j = 100 + i * 16; j < 108 + i * 16; j++)
+        for (int j = 100 + i * 16; j < 108 + i * 16; j++) {
             board[j] = 0;
+        }
     }
-
 }
 
 // board print 16x16
 void board_print(Board board) {
-    for (int i = 0; i < 256; i++) {
 
-        if (i % 16 == 0)
+    for (int i = 0; i < 256; i++) {
+        if (i % 16 == 0) {
             printf("\n");
+        }
 
         printf("%d\t", board[i]);
     }
@@ -59,14 +63,11 @@ void board_print2(Board board) {
 
     int cell, type, color;
     for (int i = 64, k = 1; i < 196; i++, k++) {
-
         if (i % 16 == 0) {
-
             printf("\n");
         }
 
         if (i % 8 == 0 && i % 16 == 0) {
-
             int number = i / 16 - 3;
             if (number != 9) {
                 printf("\x1b[33m%d\x1b[0m ", 9 - number);
@@ -79,28 +80,21 @@ void board_print2(Board board) {
         color = cell & MASK_COLOR;
 
         if (cell != MASK_BORDER) {
-
             if (color == WHITE) {
-
                 if (k % 2 == 0) {
                     printf("\x1b[1;31;47m");
-                }
-                else {
+                } else {
                     printf("\x1b[1;31;40m");
                 }
-            }
-            else if (color == BLACK) {
-
+            } else if (color == BLACK) {
                 if (k % 2 == 0) {
                     printf("\x1b[1;34;47m");
-                }
-                else {
+                } else {
                     printf("\x1b[1;34;40m");
                 }
             }
 
             switch (type) {
-
                 case FIGURE_TYPE_KING:
                     printf("K");
                     break;
@@ -128,8 +122,7 @@ void board_print2(Board board) {
                 default:
                     if (k % 2 == 0) {
                         printf("\x1b[30;47m ");
-                    }
-                    else {
+                    } else {
                         printf("\x1b[30;40m ");
                     }
                     break;
@@ -140,8 +133,9 @@ void board_print2(Board board) {
     }
 
     printf("\x1b[33m  ");
-    for (int j = 0; j < 8; j++)
+    for (int j = 0; j < 8; j++) {
         printf("%c ", 'a' + j);
+    }
 
     printf("\x1b[0m\n");
     fflush(stdout);
@@ -153,24 +147,19 @@ void who_is_cell(Board board, int coord) {
     int cell = board[coord];
 
     if (cell == CELL_EMPTY) {
-
         printf("Cell is empty");
         return;
     }
 
     int is_border = cell & MASK_BORDER;
     if (is_border == BORDER) {
-
         printf("Cell is border");
     }
 
     int color = cell & MASK_COLOR;
     if (color == WHITE) {
-
         printf("White ");
-    }
-    else {
-
+    } else {
         printf("Black ");
     }
 
@@ -202,5 +191,4 @@ void who_is_cell(Board board, int coord) {
             printf("pawn");
             break;
     }
-
 }

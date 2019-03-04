@@ -19,12 +19,10 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
     int stand_pat = evaluate(current_player);
 
     if (stand_pat >= beta) {
-
         return beta;
     }
 
     if (alpha < stand_pat) {
-
         alpha = stand_pat;
     }
 
@@ -32,9 +30,7 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
     sort_move(depth);
 
     for (int i = 0; i < MOVES_COUNT; i++) {
-
         if (moves[depth][i].MoveType == MOVE_TYPE_EAT) {
-
             make_move(moves[depth][i], depth);
 
             int score = -quiesce(-beta, -alpha, !current_player, depth - 1);
@@ -42,12 +38,10 @@ int quiesce(int alpha, int beta, int current_player, int depth) {
             rollback_move(moves[depth][i], depth);
 
             if (score >= beta) {
-
                 return beta;
             }
 
             if (score > alpha) {
-
                 alpha = score;
             }
         }
@@ -68,19 +62,16 @@ int evaluate(int player) {
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
             if (position[j] != 0) {
-
                 cell = position[j];
                 color = cell & MASK_COLOR;
                 type = cell & MASK_TYPE;
 
                 if (type != CELL_EMPTY) {
-
                     count_pieces++;
                 }
 
                 if (color == WHITE) {
                     switch (type) {
-
                         case FIGURE_TYPE_QUEEN:
                             white += QUEEN_WEIGH;
                             break;
@@ -104,10 +95,8 @@ int evaluate(int player) {
                             white_bonus += additional_points(FIGURE_TYPE_PAWN, WHITE, j);
                             break;
                     }
-                }
-                else {
+                } else {
                     switch (type) {
-
                         case FIGURE_TYPE_QUEEN:
                             black += QUEEN_WEIGH;
                             break;
@@ -136,24 +125,22 @@ int evaluate(int player) {
         }
     }
 
-    if(count_pieces <= 16)
+    if (count_pieces <= 16) {
         endspiel = 1;
+    }
 
     for (int i = 0; i < 8; i++) {
         for (int j = 68 + i * 16; j < 76 + i * 16; j++) {
             if (position[j] != 0) {
-
                 cell = position[j];
                 color = cell & MASK_COLOR;
                 type = cell & MASK_TYPE;
 
                 if (color == WHITE && type == FIGURE_TYPE_KING) {
-
                     white_bonus += king_additional_points(j, endspiel);
                 }
 
                 if (color == BLACK && type == FIGURE_TYPE_KING) {
-
                     black_bonus += king_additional_points(j, endspiel);
                 }
             }
@@ -167,11 +154,8 @@ int evaluate(int player) {
 
     int score = material + 4 * mobility + bonus;
     if (player) {
-
         return score;
-    }
-    else {
-
+    } else {
         return -score;
     }
 }
@@ -226,24 +210,18 @@ int additional_points(int type, int color, int coord) {
     int arr_coord = (8 - y) * 8 + x;
 
     if (type == FIGURE_TYPE_PAWN) {
-
         if (color == WHITE) {
-
             return pawn_white_add[arr_coord];
-        }
-        else {
-
+        } else {
             return pawn_black_add[arr_coord];
         }
     }
 
     if (type == FIGURE_TYPE_KNIGHT) {
-
         return knight[arr_coord];
     }
 
     if (type == FIGURE_TYPE_BISHOP) {
-
         return bishop[arr_coord];
     }
 
@@ -278,8 +256,7 @@ int king_additional_points(int coord, int endspiel) {
     int y = 8 - coord / 16;
     int arr_coord = (8 - y) * 8 + x;
 
-    if(endspiel) {
-
+    if (endspiel) {
         return king2[arr_coord];
     }
 

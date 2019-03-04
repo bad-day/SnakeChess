@@ -8,7 +8,6 @@ typedef struct MOVE MOVE;
 
 // move types
 enum MOVE_TYPE {
-
     MOVE_TYPE_EMPTY = -1,
     MOVE_TYPE_SIMPLY = 0,
 
@@ -22,7 +21,6 @@ enum MOVE_TYPE {
 };
 
 struct MOVE {
-
     int current_position;
     int next_position;
 
