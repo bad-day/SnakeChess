@@ -30,7 +30,6 @@ int count_move[DEPTH];
 
 // not necessary
 void move_init() {
-
     for (int i = 0; i < DEPTH; i++) {
         for (int j = 0; j < MOVES_COUNT; j++) {
             moves[i][j].MoveType = MOVE_TYPE_EMPTY;
@@ -789,7 +788,6 @@ void make_move(MOVE move, int depth) {
 
 // roll back move
 void rollback_move(MOVE move, int depth) {
-
     current_hash = old_hash[depth]; // load zobrist hash
     memcpy(position, &old_position[depth], 256 * sizeof(int)); // load position
 }

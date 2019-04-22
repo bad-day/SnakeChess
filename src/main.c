@@ -15,4 +15,5 @@ int main() {
 
     return 0;
 
+    // TODO Test, benchmark, front? extern to headers?, move array to list ?, algo to search, license?
 }

@@ -245,7 +245,7 @@ void uci_listen() {
     while (fgets(input, 90, stdin)) {
         if (strstr(input, "uci")) {
             printf("id name Snakechess\n");
-            printf("id author bad-day\n");
+            printf("id author vtr0n\n");
             printf("uciok\n");
         }
 

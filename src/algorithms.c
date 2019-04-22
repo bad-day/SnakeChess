@@ -38,6 +38,7 @@ int alpha_beta(int alpha, int beta, int depth, int level, int current_player, MO
     HASH_TABLE *hash_ptr;
     hash_ptr = &hash_table[current_hash % (MAX_HASH_TABLE_SIZE)];
 
+    // check hash is exist in hash table
     if (hash_ptr->type != HASH_TABLE_TYPE_EMPTY && hash_ptr->level <= level && hash_ptr->key == current_hash) {
         score = hash_ptr->score;
 

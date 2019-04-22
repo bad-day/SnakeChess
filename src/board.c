@@ -166,7 +166,6 @@ void who_is_cell(Board board, int coord) {
     int type = cell & MASK_TYPE;
 
     switch (type) {
-
         case FIGURE_TYPE_KING:
             printf("king");
             break;
